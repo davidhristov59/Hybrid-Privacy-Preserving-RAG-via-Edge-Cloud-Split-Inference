@@ -1,0 +1,8 @@
+torch
+langchain
+spacy
+faiss-cpu
+pinecone-client
+openai
+python-dotenv
+jsonschema
