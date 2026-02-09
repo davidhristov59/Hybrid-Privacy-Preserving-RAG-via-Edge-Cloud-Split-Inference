@@ -37,17 +37,24 @@ Based on the methodology established in **Wei et al. (IEEE, 2025)**:
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/your-username/hybrid-privacy-rag.git
-   cd hybrid-privacy-rag
+   git clone https://github.com/davidhristov59/Hybrid-Privacy-Preserving-RAG-via-Edge-Cloud-Split-Inference
+   cd Hybrid-Privacy-Preserving-RAG-via-Edge-Cloud-Split-Inference
    ```
 
-2. Install dependencies:
+2. Create a virtual environment:
+
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate
+   ```
+
+3. Install dependencies:
 
    ```bash
    pip install -r requirements.txt
    ```
 
-3. Download Spacy models:
+4. Download Spacy models:
    ```bash
    python -m spacy download en_core_web_sm
    ```
