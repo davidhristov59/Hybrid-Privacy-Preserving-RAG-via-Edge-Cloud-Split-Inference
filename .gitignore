@@ -5,4 +5,5 @@ data/raw/
 data/processed/
 edge/vault/identity_vault.json
 cloud/vector_db/
-.DS_Store
+.DS_Store.venv/
+.venv/

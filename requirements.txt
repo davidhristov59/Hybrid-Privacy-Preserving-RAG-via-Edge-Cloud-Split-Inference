@@ -6,3 +6,14 @@ pinecone-client
 openai
 python-dotenv
 jsonschema
+pypdf
+reportlab
+sentence-transformers
+langchain-community
+langchain-huggingface
+langchain-openai
+fastapi
+uvicorn
+python-multipart
+streamlit
+pandas
