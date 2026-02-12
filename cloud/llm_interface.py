@@ -21,7 +21,7 @@ class LLMService:
     def _initialize_service(self):
         """Loads the Vector DB and initializes the LLM chain."""
         if not os.path.exists(self.vector_db_path):
-            logger.warning(f"Vector DB not found at {self.vector_db_path}. Run indexer.py first.")
+            logger.info(f"Vector DB not found at {self.vector_db_path}. Waiting for documents to be uploaded and indexed.")
             return
 
         # 1. Embeddings

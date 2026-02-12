@@ -50,9 +50,14 @@ query_scrubber = TextScrubber()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup logic
-    logger.info("Service started. Verifying Vector DB...")
+    logger.info("Service started. Verifying directories...")
+    os.makedirs("data/raw/pdf", exist_ok=True)
+    os.makedirs("data/raw/csv", exist_ok=True)
+    os.makedirs("data/processed", exist_ok=True)
+
+    logger.info("Verifying Vector DB...")
     if not llm_service.vector_store:
-        logger.warning("Vector DB not ready. Search might fail.")
+        logger.info("Vector DB not ready yet. Upload documents to initialize it.")
     yield
     # Shutdown logic
     logger.info("Service shutting down.")
@@ -149,11 +154,10 @@ def delete_document(filename: str):
     # 3. Clean up Vault
     try:
         vault.remove_document_references(filename)
-    except AttributeError:
-        # Fallback if method not added yet or reloading issue
-        logger.warning("Vault does not support remove_document_references yet.")
     except Exception as e:
         logger.error(f"Error cleaning vault: {e}")
+        # We continue even if vault cleanup fails, to ensure consistency? 
+        # Ideally, we should maybe rollback, but for now we log and proceed to re-indexing.
 
     # 4. Re-index Vector DB
     try:
@@ -173,7 +177,7 @@ def get_vault_stats():
     total = len(vault.forward_mapping)
     return VaultStats(
         total_entities=total,
-        entity_counts=dict(vault.entity_counters),
+        entity_counts=vault.get_live_entity_counts(),
         last_updated="Just now"
     )
 
@@ -256,11 +260,14 @@ async def upload_document(file: UploadFile = File(...)):
         logger.error(f"Indexing failed: {e}")
         # Don't fail the request, just warn
 
+    # Force reload of vault to get fresh stats for response
+    vault.load_vault()
+
     return DocumentUploadResponse(
         filename=filename,
         status="success",
         message="File uploaded, scrubbed, and indexed.",
-        entities_masked=len(vault.forward_mapping)  # Approximation
+        entities_masked=len(vault.forward_mapping)
     )
 
 
