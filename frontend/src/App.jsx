@@ -73,8 +73,8 @@ const TrashIcon = ({ size = 16 }) => (
     <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
   </svg>
 );
-const UploadIcon = ({ size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+const UploadIcon = ({ size = 20, color = "currentColor" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
     <path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/>
   </svg>
@@ -184,30 +184,48 @@ const ChatMessage = ({ role, content, audit }) => {
   );
 };
 
-const DropZone = ({ onFile, file }) => {
+const DropZone = ({ onFiles, disabled }) => {
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef();
-  const handleDrop = (e) => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) onFile(f); };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragging(false);
+    if (disabled) return;
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      onFiles(Array.from(e.dataTransfer.files));
+    }
+  };
+
+  const handleChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      onFiles(Array.from(e.target.files));
+    }
+  };
+
   return (
-    <div onClick={() => inputRef.current?.click()}
-      onDragOver={e => { e.preventDefault(); setDragging(true); }}
+    <div onClick={() => !disabled && inputRef.current?.click()}
+      onDragOver={e => { e.preventDefault(); if (!disabled) setDragging(true); }}
       onDragLeave={() => setDragging(false)}
       onDrop={handleDrop}
       style={{
-        border: `2px dashed ${dragging ? "var(--accent)" : file ? "var(--green)" : "var(--border2)"}`,
-        borderRadius: 12, padding: "36px 24px", textAlign: "center", cursor: "pointer",
-        background: dragging ? "var(--accent-dim)" : file ? "var(--green-dim)" : "var(--surface2)",
+        border: `2px dashed ${dragging ? "var(--accent)" : "var(--border2)"}`,
+        borderRadius: 12, padding: "36px 24px", textAlign: "center",
+        cursor: disabled ? "default" : "pointer",
+        background: dragging ? "var(--accent-dim)" : "var(--surface2)",
+        opacity: disabled ? 0.6 : 1,
         transition: "all 0.2s ease",
       }}>
-      <input ref={inputRef} type="file" accept=".pdf,.csv" style={{ display: "none" }}
-        onChange={e => e.target.files[0] && onFile(e.target.files[0])} />
+      <input ref={inputRef} type="file" accept=".pdf,.csv" multiple style={{ display: "none" }} onChange={handleChange} />
       <div style={{ marginBottom: 10 }}>
-        {file ? <CheckIcon size={28} /> : <UploadIcon size={28} color={dragging ? "var(--accent)" : "var(--text3)"} />}
+        <UploadIcon size={28} color={dragging ? "var(--accent)" : "var(--text3)"} />
       </div>
-      <div style={{ fontFamily: "var(--mono)", fontSize: 12, color: file ? "var(--green)" : "var(--text2)", letterSpacing: "0.06em" }}>
-        {file ? file.name : "DROP PDF OR CSV HERE"}
+      <div style={{ fontFamily: "var(--mono)", fontSize: 12, color: "var(--text2)", letterSpacing: "0.06em" }}>
+        DROP FILES HERE (PDF, CSV)
       </div>
-      {!file && <div style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--text3)", marginTop: 6 }}>or click to browse</div>}
+      <div style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--text3)", marginTop: 6 }}>
+        or click to browse · Max 10 files
+      </div>
     </div>
   );
 };
@@ -329,91 +347,132 @@ const ChatPage = ({ messages, input, setInput, loading, handleSend, messagesEndR
 );
 
 // ── KNOWLEDGE BASE PAGE ───────────────────────────────────
-const KBPage = ({ docs, stats, uploadFile, setUploadFile, uploading, handleUpload, selectedDoc, setSelectedDoc, deleting, handleDelete }) => (
-  <div style={{ flex: 1, overflowY: "auto" }}>
-    <div style={{ padding: "20px 32px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 12, background: "var(--surface)" }}>
-      <FolderIcon size={18} />
-      <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: "0.02em" }}>Knowledge Base</span>
-    </div>
-    <div style={{ padding: "32px", display: "flex", flexDirection: "column", gap: 28 }}>
-      {stats && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, animation: "fadeUp 0.35s ease" }}>
-          <StatCard label="Masked Entities" value={stats.total_entities} accent />
-          <StatCard label="Documents" value={docs.length} />
-          <StatCard label="Vault Status" value="Active" />
-        </div>
-      )}
-      <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "24px", animation: "fadeUp 0.4s ease" }}>
-        <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 16, letterSpacing: "0.03em" }}>Add Document</div>
-        <DropZone file={uploadFile} onFile={setUploadFile} />
-        {uploadFile && (
-          <button onClick={handleUpload} disabled={uploading} style={{
-            marginTop: 14, width: "100%",
-            background: uploading ? "var(--surface3)" : "var(--accent)",
-            border: "none", borderRadius: 9, padding: "12px 20px",
-            color: uploading ? "var(--text3)" : "#000", fontFamily: "var(--font)",
-            fontSize: 13, fontWeight: 700, letterSpacing: "0.04em",
-            cursor: uploading ? "default" : "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "all 0.2s",
-          }}>
-            {uploading ? <><Spinner size={15} /> Processing...</> : <><UploadIcon size={15} /> Process & Index</>}
-          </button>
-        )}
+const KBPage = ({ docs, stats, uploadFiles, setUploadFiles, uploading, handleUpload, selectedDoc, setSelectedDoc, deleting, handleDelete }) => {
+  const handleRemoveFile = (index) => {
+    setUploadFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  return (
+    <div style={{ flex: 1, overflowY: "auto" }}>
+      <div style={{ padding: "20px 32px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 12, background: "var(--surface)" }}>
+        <FolderIcon size={18} />
+        <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: "0.02em" }}>Knowledge Base</span>
       </div>
-      <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "24px", animation: "fadeUp 0.45s ease" }}>
-        <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 18, letterSpacing: "0.03em" }}>Indexed Documents</div>
-        {docs.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "32px", fontFamily: "var(--mono)", fontSize: 12, color: "var(--text3)" }}>
-            No documents yet. Upload one to begin.
+      <div style={{ padding: "32px", display: "flex", flexDirection: "column", gap: 28 }}>
+        {stats && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, animation: "fadeUp 0.35s ease" }}>
+            <StatCard label="Masked Entities" value={stats.total_entities} accent />
+            <StatCard label="Documents" value={docs.length} />
+            <StatCard label="Vault Status" value="Active" />
           </div>
-        ) : (
-          <>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
-              {docs.map((doc, i) => (
-                <div key={i} onClick={() => setSelectedDoc(doc.filename)} style={{
-                  display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 9,
-                  background: selectedDoc === doc.filename ? "var(--accent-dim)" : "var(--surface2)",
-                  border: `1px solid ${selectedDoc === doc.filename ? "var(--accent2)" : "var(--border)"}`,
-                  cursor: "pointer", transition: "all 0.15s",
+        )}
+        
+        {/* Upload Section */}
+        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "24px", animation: "fadeUp 0.4s ease" }}>
+          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 16, letterSpacing: "0.03em" }}>Add Documents</div>
+          <DropZone onFiles={(files) => {
+              if (uploading) return;
+              // Limit check
+              const remaining = 10 - uploadFiles.length;
+              if (remaining <= 0) return; 
+              setUploadFiles(prev => [...prev, ...files.slice(0, remaining)]);
+            }} 
+            disabled={uploading} 
+          />
+
+          {/* Pending Files List */}
+          {uploadFiles.length > 0 && (
+            <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+              {uploadFiles.map((f, i) => (
+                <div key={i} style={{ 
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  padding: "8px 12px", background: "var(--surface2)", borderRadius: 8,
+                  border: "1px solid var(--border2)"
                 }}>
-                  <div style={{
-                    width: 32, height: 32, borderRadius: 6, flexShrink: 0,
-                    background: doc.file_type === "pdf" ? "rgba(255,71,87,0.1)" : "rgba(0,229,255,0.1)",
-                    border: `1px solid ${doc.file_type === "pdf" ? "var(--red)" : "var(--accent2)"}`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.04em",
-                    color: doc.file_type === "pdf" ? "var(--red)" : "var(--accent)",
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 4, height: 4, borderRadius: "50%", background: "var(--accent)" }}></div>
+                    <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--text)" }}>{f.name}</span>
+                    <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--text3)" }}>{(f.size / 1024).toFixed(0)} KB</span>
+                  </div>
+                  <button onClick={() => handleRemoveFile(i)} disabled={uploading} style={{
+                    background: "none", border: "none", cursor: "pointer", color: "var(--text3)", padding: 4
                   }}>
-                    {doc.file_type.toUpperCase()}
-                  </div>
-                  <div style={{ flex: 1, overflow: "hidden" }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{doc.filename}</div>
-                    <div style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--text3)", marginTop: 2 }}>{(doc.size_bytes / 1024).toFixed(1)} KB</div>
-                  </div>
-                  {selectedDoc === doc.filename && <div style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--accent)", flexShrink: 0 }} />}
+                    <TrashIcon size={14} />
+                  </button>
                 </div>
               ))}
-            </div>
-            {selectedDoc && (
-              <button onClick={handleDelete} disabled={deleting} style={{
-                display: "flex", alignItems: "center", gap: 7,
-                background: deleting ? "var(--surface3)" : "var(--red-dim)",
-                border: `1px solid ${deleting ? "var(--border)" : "var(--red)"}`,
-                borderRadius: 8, padding: "9px 16px",
-                color: deleting ? "var(--text3)" : "var(--red)",
-                fontSize: 12, fontFamily: "var(--font)", fontWeight: 600, letterSpacing: "0.04em",
-                cursor: deleting ? "default" : "pointer", transition: "all 0.2s",
+              
+              <button onClick={handleUpload} disabled={uploading} style={{
+                marginTop: 8, width: "100%",
+                background: uploading ? "var(--surface3)" : "var(--accent)",
+                border: "none", borderRadius: 9, padding: "12px 20px",
+                color: uploading ? "var(--text3)" : "#000", fontFamily: "var(--font)",
+                fontSize: 13, fontWeight: 700, letterSpacing: "0.04em",
+                cursor: uploading ? "default" : "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "all 0.2s",
               }}>
-                {deleting ? <Spinner size={13} /> : <TrashIcon size={13} />}
-                {deleting ? "Deleting..." : `Delete "${selectedDoc}"`}
+                {uploading ? <><Spinner size={15} /> Processing {uploadFiles.length} files...</> : <><UploadIcon size={15} /> Process & Index {uploadFiles.length} Files</>}
               </button>
-            )}
-          </>
-        )}
+            </div>
+          )}
+        </div>
+
+        {/* Existing Docs Section */}
+        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "24px", animation: "fadeUp 0.45s ease" }}>
+          <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 18, letterSpacing: "0.03em" }}>Indexed Documents</div>
+          {docs.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "32px", fontFamily: "var(--mono)", fontSize: 12, color: "var(--text3)" }}>
+              No documents yet. Upload one to begin.
+            </div>
+          ) : (
+            <>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+                {docs.map((doc, i) => (
+                  <div key={i} onClick={() => setSelectedDoc(doc.filename)} style={{
+                    display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 9,
+                    background: selectedDoc === doc.filename ? "var(--accent-dim)" : "var(--surface2)",
+                    border: `1px solid ${selectedDoc === doc.filename ? "var(--accent2)" : "var(--border)"}`,
+                    cursor: "pointer", transition: "all 0.15s",
+                  }}>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: 6, flexShrink: 0,
+                      background: doc.file_type === "pdf" ? "rgba(255,71,87,0.1)" : "rgba(0,229,255,0.1)",
+                      border: `1px solid ${doc.file_type === "pdf" ? "var(--red)" : "var(--accent2)"}`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.04em",
+                      color: doc.file_type === "pdf" ? "var(--red)" : "var(--accent)",
+                    }}>
+                      {doc.file_type.toUpperCase()}
+                    </div>
+                    <div style={{ flex: 1, overflow: "hidden" }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{doc.filename}</div>
+                      <div style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--text3)", marginTop: 2 }}>{(doc.size_bytes / 1024).toFixed(1)} KB</div>
+                    </div>
+                    {selectedDoc === doc.filename && <div style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--accent)", flexShrink: 0 }} />}
+                  </div>
+                ))}
+              </div>
+              {selectedDoc && (
+                <button onClick={handleDelete} disabled={deleting} style={{
+                  display: "flex", alignItems: "center", gap: 7,
+                  background: deleting ? "var(--surface3)" : "var(--red-dim)",
+                  border: `1px solid ${deleting ? "var(--border)" : "var(--red)"}`,
+                  borderRadius: 8, padding: "9px 16px",
+                  color: deleting ? "var(--text3)" : "var(--red)",
+                  fontSize: 12, fontFamily: "var(--font)", fontWeight: 600, letterSpacing: "0.04em",
+                  cursor: deleting ? "default" : "pointer", transition: "all 0.2s",
+                }}>
+                  {deleting ? <Spinner size={13} /> : <TrashIcon size={13} />}
+                  {deleting ? "Deleting..." : `Delete "${selectedDoc}"`}
+                </button>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ============================================================
 // MAIN APP
@@ -425,8 +484,11 @@ export default function App() {
   const [loading, setLoading]         = useState(false);
   const [docs, setDocs]               = useState([]);
   const [stats, setStats]             = useState(null);
-  const [uploadFile, setUploadFile]   = useState(null);
+  
+  // CHANGED: Manage array of files
+  const [uploadFiles, setUploadFiles] = useState([]);
   const [uploading, setUploading]     = useState(false);
+  
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [deleting, setDeleting]       = useState(false);
   const [toast, setToast]             = useState(null);
@@ -472,17 +534,32 @@ export default function App() {
   };
 
   const handleUpload = async () => {
-    if (!uploadFile) return;
+    if (uploadFiles.length === 0) return;
     setUploading(true);
-    try {
-      const form = new FormData();
-      form.append("file", uploadFile);
-      await apiFetch("/upload-document", { method: "POST", body: form });
-      showToast(`${uploadFile.name} uploaded & masked`);
-      setUploadFile(null);
-      await Promise.all([fetchDocs(), fetchStats()]);
-    } catch { showToast("Upload failed", "error"); }
+    
+    let successCount = 0;
+    
+    // Process sequentially to be safe
+    for (const file of uploadFiles) {
+      try {
+        const form = new FormData();
+        form.append("file", file);
+        await apiFetch("/upload-document", { method: "POST", body: form });
+        successCount++;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    
+    if (successCount === uploadFiles.length) {
+      showToast(`${successCount} files uploaded & masked`);
+    } else {
+      showToast(`${successCount}/${uploadFiles.length} uploaded successfully`, "error");
+    }
+    
+    setUploadFiles([]);
     setUploading(false);
+    await Promise.all([fetchDocs(), fetchStats()]);
   };
 
   const handleDelete = async () => {
@@ -511,7 +588,7 @@ export default function App() {
         {page === "kb" && (
           <KBPage
             docs={docs} stats={stats}
-            uploadFile={uploadFile} setUploadFile={setUploadFile}
+            uploadFiles={uploadFiles} setUploadFiles={setUploadFiles}
             uploading={uploading} handleUpload={handleUpload}
             selectedDoc={selectedDoc} setSelectedDoc={setSelectedDoc}
             deleting={deleting} handleDelete={handleDelete}

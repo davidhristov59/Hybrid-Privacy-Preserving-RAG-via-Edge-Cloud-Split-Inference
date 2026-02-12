@@ -102,13 +102,17 @@ if page == "📂 Knowledge Base":
     st.divider()
 
     # 2. Upload Section
-    st.subheader("Add New Document")
-    uploaded_file = st.file_uploader("Upload PDF or CSV", type=["pdf", "csv"])
-    if uploaded_file:
-        if st.button("🚀 Process & Index"):
-            if upload_document(uploaded_file):
-                time.sleep(1)
-                st.rerun()
+    st.subheader("Add New Documents")
+    uploaded_files = st.file_uploader("Upload PDF or CSV", type=["pdf", "csv"], accept_multiple_files=True)
+    if uploaded_files:
+        if st.button(f"🚀 Process & Index ({len(uploaded_files)} files)"):
+            progress_bar = st.progress(0)
+            for i, uploaded_file in enumerate(uploaded_files):
+                upload_document(uploaded_file)
+                progress_bar.progress((i + 1) / len(uploaded_files))
+            
+            time.sleep(1)
+            st.rerun()
 
     st.divider()
 
