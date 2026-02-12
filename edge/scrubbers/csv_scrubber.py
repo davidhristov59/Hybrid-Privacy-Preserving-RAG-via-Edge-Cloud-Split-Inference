@@ -21,10 +21,16 @@ from edge.vault.mapping_db import IdentityVault
 
 # Regex Patterns for automatic column detection
 PII_REGEX = {
-    "EMAIL": re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'),
+    "EMAIL": re.compile(r'\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b'),
     "PHONE": re.compile(r'\b(?:\+\d{1,3}[- ]?)?\(?\d{3}\)?[- ]?\d{3}[- ]?\d{4}\b'),
     "SSN": re.compile(r'\b\d{3}-\d{2}-\d{4}\b'),
-    "ID": re.compile(r'\b(MRN|ID|SJ|RC|ER)[-_][A-Z0-9]+\b', re.IGNORECASE)
+    "ID": re.compile(r'\b(MRN|ID|SJ|RC|ER)[-_][A-Z0-9]+\b', re.IGNORECASE),
+    "DATE": re.compile(
+        r'(?:\b\d{4}[-/]\d{1,2}[-/]\d{1,2}\b)|'  # YYYY-MM-DD
+        r'(?:\b\d{1,2}[-/]\d{1,2}[-/]\d{2,4}\b)|' # DD/MM/YYYY
+        r'(?:\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.? \d{1,2}(?:st|nd|rd|th)?,? \d{4}\b)', # Text dates
+        re.IGNORECASE
+    )
 }
 
 class CSVScrubber:

@@ -76,23 +76,35 @@ class LLMService:
             )
             logger.info("QA Chain initialized.")
 
-    def query(self, question: str) -> str:
+    def query(self, question: str, history: list = []) -> str:
         """
-        Queries the RAG system.
+        Queries the RAG system with conversation history.
         """
         if not self.qa_chain:
             return "System is not initialized (Vector DB or LLM missing)."
         
+        # Format history into a string context
+        history_text = ""
+        if history:
+            history_text = "Conversation History:\n"
+            for msg in history:
+                role = "User" if msg["role"] == "user" else "AI"
+                history_text += f"{role}: {msg['content']}\n"
+            history_text += "\n"
+
+        # We inject history into the query context for the LLM
+        # The prompt template expects {context} (docs) and {question}.
+        # We can prepend history to the question so the LLM sees it.
+        full_query = f"{history_text}Current Question: {question}"
+
         logger.info(f"--- CLOUD TRANSMISSION ---")
-        logger.info(f"SENT TO LLM: {question}")
+        logger.info(f"SENT TO LLM: {question}") # Log short version
+        logger.info(f"WITH HISTORY: {len(history)} messages")
         logger.info(f"--------------------------")
         
         try:
-            # result = self.qa_chain.invoke({"query": question})
-            # return result["result"]
-            
             # Use verbose running to inspect retrieval
-            response = self.qa_chain.invoke({"query": question})
+            response = self.qa_chain.invoke({"query": full_query})
             
             # Log retrieved docs
             source_docs = response.get("source_documents", [])

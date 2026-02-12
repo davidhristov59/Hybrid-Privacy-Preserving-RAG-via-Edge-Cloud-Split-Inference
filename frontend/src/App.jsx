@@ -518,17 +518,45 @@ export default function App() {
     if (!input.trim() || loading) return;
     const userMsg = input.trim();
     setInput("");
-    setMessages(prev => [...prev, { role: "user", content: userMsg }]);
+    
+    const now = Date.now();
+    const newMessage = { role: "user", content: userMsg, timestamp: now };
+    
+    // Optimistically update UI
+    setMessages(prev => [...prev, newMessage]);
     setLoading(true);
+    
+    // Prepare History (Max 10 messages, max 30 mins old)
+    // We filter the *existing* messages, excluding the one we just added (since we want history *before* this)
+    // Actually, sending the current one as part of history is redundant if the API expects "history" + "current_message".
+    // So we take `messages` (current state before update)
+    const thirtyMinsAgo = now - (30 * 60 * 1000);
+    const validHistory = messages
+      .filter(m => m.timestamp && m.timestamp > thirtyMinsAgo) // Time limit
+      .slice(-10) // Count limit (last 10)
+      .map(m => ({ role: m.role, content: m.content })); // Clean payload
+
     try {
       const data = await apiFetch("/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMsg }),
+        body: JSON.stringify({ 
+          message: userMsg,
+          history: validHistory
+        }),
       });
-      setMessages(prev => [...prev, { role: "assistant", content: data.response || "No response.", audit: data.context || "" }]);
+      setMessages(prev => [...prev, { 
+        role: "assistant", 
+        content: data.response || "No response.", 
+        audit: data.context || "",
+        timestamp: Date.now() 
+      }]);
     } catch {
-      setMessages(prev => [...prev, { role: "assistant", content: "⚠ Connection error. Is the API running?" }]);
+      setMessages(prev => [...prev, { 
+        role: "assistant", 
+        content: "⚠ Connection error. Is the API running?",
+        timestamp: Date.now()
+      }]);
     }
     setLoading(false);
   };

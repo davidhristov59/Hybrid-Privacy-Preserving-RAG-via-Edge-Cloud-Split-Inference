@@ -185,25 +185,36 @@ def get_vault_stats():
 @app.post("/chat", response_model=ChatResponse)
 def chat_endpoint(payload: ChatInput):
     user_query = payload.message
+    history = payload.history or []
 
-    # 1. Edge: Mask the Query
-    # We simply replace known entities in the query with their tokens.
-    # Since the query is short, we can check against our known entities in the vault.
-    # A simple approach: iterate forward mapping.
-    # For a production system, use NER again, but here we want to match EXISTING entities.
-    masked_query = user_query
+    # 1. Edge: Mask the Query AND History
+    # We need to mask the entire conversation context so the LLM understands "it", "she", "he" referring to previous entities.
+    
+    # Helper to mask a string
+    def mask_text(text):
+        masked = text
+        # Sort keys by length to replace "Sarah Jenkins" before "Sarah"
+        known_entities = sorted(vault.forward_mapping.keys(), key=len, reverse=True)
+        for entity in known_entities:
+            if entity in masked:
+                masked = masked.replace(entity, vault.forward_mapping[entity])
+        return masked
 
-    # Sort keys by length to replace "Sarah Jenkins" before "Sarah"
-    known_entities = sorted(vault.forward_mapping.keys(), key=len, reverse=True)
-    for entity in known_entities:
-        if entity in masked_query:
-            masked_query = masked_query.replace(entity, vault.forward_mapping[entity])
+    masked_query = mask_text(user_query)
+    
+    # Process history: only take the last 10 messages (or fewer) as requested, 
+    # though frontend handles the time limit, we handle masking here.
+    masked_history = []
+    for msg in history:
+        masked_msg = mask_text(msg["content"])
+        masked_history.append({"role": msg["role"], "content": masked_msg})
 
     logger.info(f"Original Query: {user_query}")
     logger.info(f"Masked Query:   {masked_query}")
+    logger.info(f"History Depth:  {len(masked_history)}")
 
-    # 2. Cloud: RAG Retrieval & Generation
-    masked_response = llm_service.query(masked_query)
+    # 2. Cloud: RAG Retrieval & Generation with History
+    masked_response = llm_service.query(masked_query, history=masked_history)
     logger.info(f"Cloud Response: {masked_response}")
 
     # 3. Edge: Reconstruct (Unmask)
