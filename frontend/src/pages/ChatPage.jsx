@@ -54,64 +54,85 @@ export const ChatPage = () => {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", flex: 1 }}>
-      <div style={{ padding: "20px 32px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 12, background: "var(--surface)" }}>
-        <ChatIcon size={18} />
-        <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: "0.02em" }}>Secure Chat</span>
-        <span style={{ marginLeft: "auto", fontFamily: "var(--mono)", fontSize: 10, color: "var(--text3)", letterSpacing: "0.08em" }}>
-          PII MASKED AT EDGE · SAFE CLOUD INFERENCE
-        </span>
-      </div>
-      <div style={{ flex: 1, overflowY: "auto", padding: "28px 32px", display: "flex", flexDirection: "column", gap: 20 }}>
-        {messages.length === 0 && (
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, opacity: 0.5 }}>
-            <div style={{ width: 56, height: 56, borderRadius: "50%", border: "1.5px solid var(--accent2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <ShieldIcon size={24} color="var(--accent2)" />
+    <div className="flex flex-col h-screen bg-background">
+      {/* Header */}
+      <header className="px-8 py-5 border-b border-border bg-card/50 backdrop-blur-sm flex items-center gap-3 sticky top-0 z-10">
+        <ChatIcon size={20} className="text-foreground" />
+        <h1 className="text-lg font-semibold tracking-tight text-foreground">Secure Chat</h1>
+        <div className="ml-auto flex items-center gap-2 px-3 py-1 bg-secondary rounded-full border border-white/5">
+          <ShieldIcon size={12} className="text-emerald-500" />
+          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">End-to-End Privacy</span>
+        </div>
+      </header>
+
+      {/* Messages Area */}
+      <main className="flex-1 overflow-y-auto p-8 scroll-smooth">
+        <div className="max-w-3xl mx-auto flex flex-col gap-6">
+          {messages.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-20 opacity-50">
+              <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-6 ring-1 ring-white/10">
+                <ShieldIcon size={32} className="text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Privacy Mode Active</h3>
+              <p className="text-sm text-muted-foreground text-center max-w-sm">
+                Queries are saniitized locally before reaching the cloud.
+                Personally Identifiable Information (PII) is restored upon response.
+              </p>
             </div>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text2)", marginBottom: 4 }}>Privacy Mode Active</div>
-              <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--text3)" }}>Sensitive entities are redacted before reaching the cloud</div>
+          )}
+          
+          {messages.map((msg, i) => <ChatMessage key={i} {...msg} />)}
+          
+          {loading && (
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 rounded-md bg-card border border-border flex items-center justify-center text-muted-foreground">
+                <ShieldIcon size={12} />
+              </div>
+              <div className="flex gap-1.5 px-4 py-3 bg-card border border-border rounded-2xl rounded-tl-sm shadow-sm items-center">
+                <div className="w-1.5 h-1.5 rounded-full bg-foreground/30 animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-foreground/30 animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-foreground/30 animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+      </main>
+
+      {/* Input Area */}
+      <footer className="p-6 border-t border-border bg-card/50 backdrop-blur-sm">
+        <div className="max-w-3xl mx-auto">
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500 blur-xl" />
+            <div className="relative flex gap-3 bg-background border border-input ring-offset-background rounded-xl px-4 py-3 shadow-sm transition-all focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:border-transparent">
+              <input
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && !e.shiftKey && handleSend()}
+                placeholder="Ask a question about your documents..."
+                className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-muted-foreground"
+                autoFocus
+              />
+              <button 
+                onClick={handleSend} 
+                disabled={!input.trim() || loading}
+                className={`
+                  p-2 rounded-lg transition-all duration-200
+                  ${input.trim() && !loading 
+                    ? "bg-primary text-primary-foreground hover:opacity-90 shadow-md scale-100" 
+                    : "bg-secondary text-muted-foreground opacity-50 scale-95 cursor-not-allowed"}
+                `}
+              >
+                {loading ? <Spinner size={16} className="text-current" /> : <SendIcon size={16} />}
+              </button>
             </div>
           </div>
-        )}
-        {messages.map((msg, i) => <ChatMessage key={i} {...msg} />)}
-        {loading && (
-          <div style={{ display: "flex", alignItems: "center", gap: 10, animation: "fadeUp 0.3s ease" }}>
-            <div style={{ width: 22, height: 22, borderRadius: "50%", background: "var(--accent-dim)", border: "1px solid var(--accent2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <ShieldIcon size={11} color="var(--accent)" />
-            </div>
-            <div style={{ display: "flex", gap: 4, padding: "12px 16px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "14px 14px 14px 4px" }}>
-              {[0, 1, 2].map(i => (
-                <div key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent2)", animation: `pulse 1.2s ${i * 0.2}s ease infinite` }} />
-              ))}
-            </div>
+          <div className="mt-3 flex justify-center items-center gap-2 text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+            <LockIcon size={10} />
+            <span>Encrypted Pipeline · Zero-Trust Architecture</span>
           </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-      <div style={{ padding: "20px 32px", borderTop: "1px solid var(--border)", background: "var(--surface)" }}>
-        <div style={{ display: "flex", gap: 10, background: "var(--surface2)", border: "1px solid var(--border2)", borderRadius: 12, padding: "10px 14px" }}>
-          <input
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && !e.shiftKey && handleSend()}
-            placeholder="Ask about your documents..."
-            style={{ flex: 1, background: "none", border: "none", outline: "none", color: "var(--text)", fontFamily: "var(--font)", fontSize: 14, lineHeight: 1.5 }}
-          />
-          <button onClick={handleSend} disabled={!input.trim() || loading} style={{
-            background: input.trim() && !loading ? "var(--accent)" : "var(--surface3)",
-            border: "none", borderRadius: 8, padding: "8px 14px",
-            color: input.trim() && !loading ? "#000" : "var(--text3)",
-            cursor: input.trim() && !loading ? "pointer" : "default",
-            display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s",
-          }}>
-            {loading ? <Spinner size={16} /> : <SendIcon size={16} />}
-          </button>
         </div>
-        <div style={{ marginTop: 8, fontFamily: "var(--mono)", fontSize: 10, color: "var(--text3)", textAlign: "center", letterSpacing: "0.06em" }}>
-          <LockIcon size={11} /> &nbsp;ENTER TO SEND · PII STRIPPED LOCALLY BEFORE TRANSMISSION
-        </div>
-      </div>
+      </footer>
     </div>
   );
 };

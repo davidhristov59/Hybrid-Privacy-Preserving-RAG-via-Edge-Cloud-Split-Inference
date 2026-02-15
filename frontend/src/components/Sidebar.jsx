@@ -1,62 +1,61 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { ShieldIcon, ChatIcon, FolderIcon, GridIcon } from "./Icons";
 
 export const Sidebar = ({ stats }) => {
-  const location = useLocation();
-  const currentPath = location.pathname;
-
   const links = [
-    { to: "/dashboard",      label: "Dashboard",      icon: <GridIcon size={16} /> },
+    { to: "/dashboard",      label: "Overview",       icon: <GridIcon size={16} /> },
     { to: "/chat",           label: "Secure Chat",    icon: <ChatIcon size={16} /> },
-    { to: "/knowledge_base", label: "Knowledge Base", icon: <FolderIcon size={16} /> },
+    { to: "/knowledge_base", label: "Documents",      icon: <FolderIcon size={16} /> },
   ];
 
   return (
-    <aside style={{
-      width: 220, minHeight: "100vh", background: "var(--surface)",
-      borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column",
-      padding: "28px 0", flexShrink: 0,
-    }}>
-      <div style={{ padding: "0 24px 32px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 34, height: 34, borderRadius: 8, background: "var(--accent-dim)", border: "1px solid var(--accent2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <ShieldIcon size={17} color="var(--accent)" />
+    <aside className="w-64 h-screen border-r border-border bg-card flex flex-col fixed left-0 top-0 z-50">
+      <div className="p-6 pb-8">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
+            <ShieldIcon size={16} color="currentColor" />
           </div>
           <div>
-            <div style={{ fontFamily: "var(--font)", fontSize: 13, fontWeight: 700, letterSpacing: "0.04em", color: "var(--text)" }}>PRIV·RAG</div>
-            <div style={{ fontFamily: "var(--mono)", fontSize: 9, color: "var(--text3)", letterSpacing: "0.1em" }}>EDGE-CLOUD SPLIT</div>
+            <div className="font-semibold text-sm tracking-tight text-foreground">SplitRAG</div>
+            <div className="text-[10px] text-muted-foreground tracking-wider font-medium">ENTERPRISE SECURITY</div>
           </div>
         </div>
       </div>
-      <nav style={{ flex: 1 }}>
-        {links.map(item => {
-          const isActive = currentPath === item.to;
-          return (
-            <NavLink 
-              key={item.to} 
-              to={item.to} 
-              style={{
-                width: "100%", display: "flex", alignItems: "center", gap: 10,
-                padding: "10px 24px", background: isActive ? "var(--accent-dim)" : "none",
-                border: "none", borderLeft: `2px solid ${isActive ? "var(--accent)" : "transparent"}`,
-                color: isActive ? "var(--accent)" : "var(--text2)",
-                fontSize: 13, fontFamily: "var(--font)", fontWeight: isActive ? 600 : 400,
-                cursor: "pointer", transition: "all 0.2s", textAlign: "left", textDecoration: "none"
-              }}
-            >
-              {item.icon}{item.label}
-            </NavLink>
-          )
-        })}
-      </nav>
-      <div style={{ padding: "0 24px" }}>
-        <div style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 8, padding: "12px 14px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--green)", animation: "pulse 2s infinite" }} />
-            <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--green)", letterSpacing: "0.08em" }}>VAULT ACTIVE</span>
+
+      <div className="flex-1 px-3 space-y-1">
+        <div className="px-3 text-[11px] font-medium text-muted-foreground mb-2 uppercase tracking-wider">Platform</div>
+        {links.map(item => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 group ${
+                isActive 
+                  ? "bg-secondary text-foreground shadow-sm ring-1 ring-white/5" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <span className={isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}>
+                  {item.icon}
+                </span>
+                {item.label}
+              </>
+            )}
+          </NavLink>
+        ))}
+      </div>
+
+      <div className="p-4 border-t border-border">
+        <div className="bg-secondary/50 rounded-lg p-3 border border-border">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[10px] font-mono text-emerald-500 font-medium tracking-wide">VAULT ACTIVE</span>
           </div>
-          <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--text3)" }}>
-            {stats ? `${stats.total_entities} entities masked` : "Loading..."}
+          <div className="text-xs font-medium text-muted-foreground">
+            <span className="text-foreground font-mono">{stats?.total_entities || 0}</span> entities masked
           </div>
         </div>
       </div>

@@ -1,31 +1,37 @@
-import { useState } from "react";
 import { ShieldIcon } from "./Icons";
 import { AuditPanel } from "./AuditPanel";
 
 export const ChatMessage = ({ role, content, audit }) => {
   const isUser = role === "user";
+  
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: isUser ? "flex-end" : "flex-start", animation: "fadeUp 0.3s ease", gap: 4 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
-        {!isUser && (
-          <div style={{ width: 22, height: 22, borderRadius: "50%", background: "var(--accent-dim)", border: "1px solid var(--accent2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <ShieldIcon size={11} color="var(--accent)" />
-          </div>
-        )}
-        <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--text3)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+    <div className={`flex flex-col gap-2 max-w-3xl ${isUser ? "items-end ml-auto" : "items-start mr-auto"}`}>
+      <div className={`flex items-center gap-2 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
+        <div className={`
+          w-6 h-6 rounded-md flex items-center justify-center border text-[10px] font-bold
+          ${isUser ? "bg-primary text-primary-foreground border-primary" : "bg-card text-foreground border-border"}
+        `}>
+          {isUser ? "U" : <ShieldIcon size={12} />}
+        </div>
+        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
           {isUser ? "You" : "System"}
         </span>
       </div>
-      <div style={{
-        maxWidth: "78%", background: isUser ? "var(--surface3)" : "var(--surface2)",
-        border: `1px solid ${isUser ? "var(--border2)" : "var(--border)"}`,
-        borderRadius: isUser ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
-        padding: "12px 16px", fontSize: 14, lineHeight: 1.7, color: "var(--text)", fontFamily: "var(--font)",
-        ...(isUser ? { borderRight: "2px solid var(--accent2)" } : {}),
-      }}>
+
+      <div className={`
+        px-4 py-3 rounded-2xl text-sm leading-relaxed max-w-full shadow-sm
+        ${isUser 
+          ? "bg-primary text-primary-foreground rounded-tr-sm" 
+          : "bg-card border border-border text-card-foreground rounded-tl-sm"}
+      `}>
         {content}
       </div>
-      {!isUser && audit && <AuditPanel maskedText={audit} />}
+
+      {!isUser && audit && (
+        <div className="w-full max-w-[95%]">
+          <AuditPanel maskedText={audit} />
+        </div>
+      )}
     </div>
   );
 };

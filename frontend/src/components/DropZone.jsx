@@ -21,28 +21,30 @@ export const DropZone = ({ onFiles, disabled }) => {
   };
 
   return (
-    <div onClick={() => !disabled && inputRef.current?.click()}
+    <div
+      onClick={() => !disabled && inputRef.current?.click()}
       onDragOver={e => { e.preventDefault(); if (!disabled) setDragging(true); }}
       onDragLeave={() => setDragging(false)}
       onDrop={handleDrop}
-      style={{
-        border: `2px dashed ${dragging ? "var(--accent)" : "var(--border2)"}`,
-        borderRadius: 12, padding: "36px 24px", textAlign: "center",
-        cursor: disabled ? "default" : "pointer",
-        background: dragging ? "var(--accent-dim)" : "var(--surface2)",
-        opacity: disabled ? 0.6 : 1,
-        transition: "all 0.2s ease",
-      }}>
-      <input ref={inputRef} type="file" accept=".pdf,.csv" multiple style={{ display: "none" }} onChange={handleChange} />
-      <div style={{ marginBottom: 10 }}>
-        <UploadIcon size={28} color={dragging ? "var(--accent)" : "var(--text3)"} />
+      className={`
+        relative group cursor-pointer rounded-xl border border-dashed transition-all duration-200 ease-in-out
+        flex flex-col items-center justify-center p-8 sm:p-10 text-center
+        ${dragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50 hover:bg-secondary/50"}
+        ${disabled ? "opacity-50 cursor-not-allowed" : ""}
+      `}
+    >
+      <input ref={inputRef} type="file" accept=".pdf,.csv" multiple className="hidden" onChange={handleChange} />
+      
+      <div className={`p-3 rounded-full bg-secondary mb-4 transition-colors ${dragging ? "bg-primary/10" : "group-hover:bg-background"}`}>
+        <UploadIcon size={20} className={dragging ? "text-primary" : "text-muted-foreground"} />
       </div>
-      <div style={{ fontFamily: "var(--mono)", fontSize: 12, color: "var(--text2)", letterSpacing: "0.06em" }}>
-        DROP FILES HERE (PDF, CSV)
-      </div>
-      <div style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--text3)", marginTop: 6 }}>
-        or click to browse · Max 10 files
-      </div>
+      
+      <h3 className="text-sm font-medium text-foreground mb-1">
+        Upload Documents
+      </h3>
+      <p className="text-xs text-muted-foreground max-w-[200px]">
+        Drag & drop PDF or CSV files here, or click to browse
+      </p>
     </div>
   );
 };
