@@ -12,6 +12,7 @@ Unlike traditional RAG systems, this project provides a **Hybrid approach**, pro
 - **Edge-Cloud Split Inference:** Anonymization and result reconstruction happen at the **Edge**, while the **Cloud** only sees masked tokens.
 - **Hybrid Knowledge Synthesis:** Capability to link facts across different formats (e.g., matching a patient's medical history in a PDF with their lab results in a CSV).
 - **Zero-Trust Security:** Prevents **Embedding Inversion Attacks** by ensuring raw sensitive text is never converted into cloud-stored vectors.
+- **LangChain Orchestration:** Utilizes LangChain to manage the RAG pipeline, including document retrieval from FAISS, prompt templating, and interfacing with OpenAI/HuggingFace LLMs.
 
 ## Technical Architecture
 
@@ -59,7 +60,16 @@ Based on the methodology established in **Wei et al. (IEEE, 2025)**:
    python -m spacy download en_core_web_lg
    ```
 
-## Running the Application
+## Quick Start (Recommended)
+
+You can start the entire environment (Preparation, Backend, and Frontend) with a single command:
+
+```bash
+chmod +x start.sh
+./start.sh
+```
+
+## Running the Application (Manual)
 
 ### 1. Start the Backend (FastAPI)
 
