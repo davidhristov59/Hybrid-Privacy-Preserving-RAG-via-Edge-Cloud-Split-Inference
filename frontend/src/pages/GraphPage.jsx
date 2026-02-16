@@ -150,6 +150,7 @@ export function GraphPage() {
             onClick={handleZoomIn}
             className="p-3 bg-card/80 backdrop-blur-sm border border-border rounded-lg hover:bg-accent/10 hover:border-accent transition-all"
             title="Zoom In"
+            aria-label="Zoom In"
           >
             <ZoomIn size={20} />
           </button>
@@ -157,6 +158,7 @@ export function GraphPage() {
             onClick={handleZoomOut}
             className="p-3 bg-card/80 backdrop-blur-sm border border-border rounded-lg hover:bg-accent/10 hover:border-accent transition-all"
             title="Zoom Out"
+            aria-label="Zoom Out"
           >
             <ZoomOut size={20} />
           </button>
@@ -164,6 +166,7 @@ export function GraphPage() {
             onClick={handleReset}
             className="p-3 bg-card/80 backdrop-blur-sm border border-border rounded-lg hover:bg-accent/10 hover:border-accent transition-all"
             title="Reset View"
+            aria-label="Reset View"
           >
             <RotateCcw size={20} />
           </button>
@@ -171,6 +174,7 @@ export function GraphPage() {
             onClick={() => setIsFullscreen(!isFullscreen)}
             className="p-3 bg-card/80 backdrop-blur-sm border border-border rounded-lg hover:bg-accent/10 hover:border-accent transition-all"
             title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+            aria-label={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
           >
             {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
           </button>
