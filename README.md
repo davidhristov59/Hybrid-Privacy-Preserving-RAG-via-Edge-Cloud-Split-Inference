@@ -29,8 +29,8 @@ Based on the methodology established in **Wei et al. (IEEE, 2025)**:
 
 - Python 3.9+
 - Spacy (for NER)
-- LangChain / LlamaIndex
-- FAISS or Pinecone (for Vector Storage)
+- LangChain
+- FAISS (for Vector Storage)
 
 ### Installation
 
@@ -59,25 +59,42 @@ Based on the methodology established in **Wei et al. (IEEE, 2025)**:
    python -m spacy download en_core_web_sm
    ```
 
+## Running the Application
+
+### 1. Start the Backend (FastAPI)
+
+```bash
+python app.py
+```
+
+The API will be available at `http://localhost:8000/docs`.
+
+### 2. Start the Frontend (Vite + React)
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The dashboard will be available at `http://localhost:5173`.
+
 ## Project Structure
 
 ```bash
-hybrid-privacy-rag/
+├── app.py                   # FastAPI Backend Server
+├── main.py                  # CLI Orchestrator (Offline Prep)
+├── models.py                # Pydantic models for API
 ├── data/
-│   ├── raw/                 # Original CSVs and PDFs
-│   └── processed/           # Masked/Anonymized data (safe for cloud)
+│   ├── raw/                 # Original CSVs and PDFs (Local)
+│   └── processed/           # Masked/Anonymized data
 ├── edge/                    # Local environment (The "Safe Zone")
-│   ├── vault/
-│   │   ├── mapping_db.py    # Local HashMap logic (PMR-KB)
-│   │   └── identity_vault.json
-│   ├── scrubbers/
-│   │   ├── pdf_scrubber.py  # NER logic for unstructured text
-│   │   └── csv_scrubber.py  # PII masking for structured tables
-│   └── reconstructor.py     # Restoration of final AI answers
-├── cloud/                   # Simulated or Real Cloud environment
+│   ├── vault/               # Local Identity Vault (PMR-KB)
+│   ├── scrubbers/           # NER maskers for PDF/CSV
+│   └── reconstructor.py     # De-anonymization logic
+├── cloud/                   # Simulated Cloud environment
 │   ├── vector_db/           # Vector store for masked embeddings
-│   └── llm_interface.py     # Interaction with OpenAI/Gemini/Azure
-├── main.py                  # Orchestrator (The Split Inference flow)
-├── requirements.txt         # Dependencies (PyTorch, LangChain, Spacy)
-└── README.md
+│   └── llm_interface.py     # Cloud LLM Integration
+├── frontend/                # React Dashboard (Vite + Tailwind)
+└── requirements.txt         # Python dependencies
 ```
