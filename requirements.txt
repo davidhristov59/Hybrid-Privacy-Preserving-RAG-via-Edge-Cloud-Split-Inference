@@ -15,5 +15,10 @@ langchain-openai
 fastapi
 uvicorn
 python-multipart
-streamlit
-pandas
+rouge-score
+nltk
+sacrebleu
+evaluate
+datasets
+transformers
+accelerate

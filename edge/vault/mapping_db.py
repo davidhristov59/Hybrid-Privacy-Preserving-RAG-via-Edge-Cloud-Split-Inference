@@ -3,7 +3,7 @@ import os
 from collections import defaultdict
 from datetime import datetime
 
-VAULT_PATH = os.getenv("VAULT_PATH")
+VAULT_PATH = os.getenv("VAULT_PATH", "edge/vault/identity_vault.json")
 
 class IdentityVault:
     _instance = None
@@ -177,6 +177,25 @@ class IdentityVault:
         Returns the token itself if no mapping is found.
         """
         return self.reverse_mapping.get(token, token)
+
+    def get_live_entity_counts(self):
+        """
+        Calculates the actual count of entities currently in the vault by type.
+        This differs from self.entity_counters which is a monotonic ID generator.
+        """
+        counts = defaultdict(int)
+        for meta in self.metadata.values():
+            # Use the 'type' field from metadata if available, or fallback/infer
+            etype = meta.get("type", "UNKNOWN")
+            # We want to group by the readable prefix (e.g. "Person" instead of "PERSON")
+            # Re-use the map function or just use the raw type? 
+            # The dashboard likely expects keys like "Person", "Org".
+            # The token usually starts with "Person_", so we can split the token too.
+            # But relying on metadata type is cleaner. 
+            # Let's normalize it using the helper if possible, or just capitalize.
+            prefix = self._map_entity_type_to_prefix(etype)
+            counts[prefix] += 1
+        return dict(counts)
 
     def _map_entity_type_to_prefix(self, entity_type):
         """Maps NER labels to cleaner token prefixes."""

@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 # Add parent directory to path to import vault
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-sys.path.insert(0, project_root)
+# project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+# sys.path.insert(0, project_root)
 
 from edge.vault.mapping_db import IdentityVault
 
@@ -25,11 +25,26 @@ MODEL_NAME = "en_core_web_lg"
 
 # Regex Patterns for additional PII
 PII_REGEX = {
-    "EMAIL": re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'),
+    # Robust Email Regex (Standard RFC 5322ish)
+    "EMAIL": re.compile(r'\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b'),
+    
     "PHONE": re.compile(r'\b(?:\+\d{1,3}[- ]?)?\(?\d{3}\)?[- ]?\d{3}[- ]?\d{4}\b'),
+    
     "SSN": re.compile(r'\b\d{3}-\d{2}-\d{4}\b'),
-    # Simple MRN/ID pattern (e.g., MRN-123456 or ID_999) - customize as needed
-    "ID": re.compile(r'\b(MRN|ID)[-_][A-Z0-9]+\b', re.IGNORECASE)
+    
+    # Custom ID pattern
+    "ID": re.compile(r'\b(MRN|ID)[-_][A-Z0-9]+\b', re.IGNORECASE),
+    
+    # Comprehensive Date Regex:
+    # 1. YYYY-MM-DD or YYYY/MM/DD
+    # 2. DD-MM-YYYY or DD/MM/YYYY
+    # 3. Text: Jan 1, 2023 | January 1st, 2023
+    "DATE": re.compile(
+        r'(?:\b\d{4}[-/]\d{1,2}[-/]\d{1,2}\b)|'  # YYYY-MM-DD
+        r'(?:\b\d{1,2}[-/]\d{1,2}[-/]\d{2,4}\b)|' # DD/MM/YYYY
+        r'(?:\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.? \d{1,2}(?:st|nd|rd|th)?,? \d{4}\b)', # Text dates
+        re.IGNORECASE
+    )
 }
 
 class TextScrubber:
