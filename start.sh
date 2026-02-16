@@ -10,44 +10,37 @@ if [ ! -f "$PYTHON_EXEC" ]; then
     exit 1
 fi
 
-# Run preparation phase
+# 1. Preparation Phase
 echo "Running Preparation Phase..."
 $PYTHON_EXEC main.py || { echo "Preparation Phase failed. Exiting."; exit 1; }
 
-# Start backend server in the background
-echo "Starting Backend..."
+# 2. Start Backend
+echo "Starting Backend (logging to backend.log)..."
 $PYTHON_EXEC app.py > backend.log 2>&1 &
 BACKEND_PID=$!
-
-# Wait for backend to be ready
-echo "Waiting for backend to start (this may take a few moments)..."
-MAX_RETRIES=30
-RETRY_COUNT=0
-while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-    if curl -s http://localhost:8000/health | grep -q "healthy"; then
-        echo "Backend is ready!"
-        break
-    fi
-    RETRY_COUNT=$((RETRY_COUNT + 1))
-    sleep 2
-done
-
-if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-    echo " Warning: Backend health check timed out. Proceeding anyway..."
-fi
 
 # Function to cleanup backend on exit
 cleanup() {
     echo ""
     echo "Shutting down backend (PID: $BACKEND_PID)..."
-    kill $BACKEND_PID
+    kill $BACKEND_PID 2>/dev/null
     exit
 }
-
-# Trap SIGINT (Ctrl+C) and EXIT
 trap cleanup SIGINT EXIT
 
-# Setup and start frontend
+# 3. Wait for Backend
+echo "Waiting for backend health check (up to 60s)..."
+RETRIES=0
+while [ $RETRIES -lt 30 ]; do
+    if curl -s http://localhost:8000/health | grep -q "healthy"; then
+        echo "Backend is ready!"
+        break
+    fi
+    RETRIES=$((RETRIES + 1))
+    sleep 2
+done
+
+# 4. Start Frontend
 echo "Starting Frontend..."
 cd frontend || exit
 if [ ! -d "node_modules" ]; then
