@@ -5,6 +5,11 @@ from datetime import datetime
 
 VAULT_PATH = os.getenv("VAULT_PATH", "edge/vault/identity_vault.json")
 
+# Graph serialization performance safeguards
+MAX_ENTITIES_PER_SOURCE = int(os.getenv("MAX_ENTITIES_PER_SOURCE", "50"))  # Cap entities per source for link generation
+MIN_COOCCURRENCE_THRESHOLD = int(os.getenv("MIN_COOCCURRENCE_THRESHOLD", "1"))  # Minimum shared sources to create a link
+MAX_LINKS_PER_NODE = int(os.getenv("MAX_LINKS_PER_NODE", "20"))  # Top-N strongest links per node
+
 class IdentityVault:
     _instance = None
 
@@ -280,6 +285,10 @@ class IdentityVault:
         link_strength = {}  # (token1, token2) -> count of shared sources
         
         for source, tokens in source_to_tokens.items():
+            # Safeguard: Skip sources with too many entities to prevent O(k^2) explosion
+            if len(tokens) > MAX_ENTITIES_PER_SOURCE:
+                continue
+            
             # Create links between all pairs of tokens in this source
             for i in range(len(tokens)):
                 for j in range(i + 1, len(tokens)):
@@ -287,13 +296,51 @@ class IdentityVault:
                     key = (token1, token2)
                     link_strength[key] = link_strength.get(key, 0) + 1
         
-        # Convert to links array
-        for (source, target), strength in link_strength.items():
-            links.append({
-                "source": source,
-                "target": target,
-                "value": strength  # Thickness of link based on co-occurrence count
-            })
+        # Safeguard: Only emit links above minimum co-occurrence threshold
+        filtered_links = {k: v for k, v in link_strength.items() if v >= MIN_COOCCURRENCE_THRESHOLD}
+        
+        # Safeguard: Limit to top-N strongest links per node
+        # Build adjacency list for each node
+        node_links = defaultdict(list)  # node -> [(strength, other_node, link_key)]
+        for (token1, token2), strength in filtered_links.items():
+            link_key = (token1, token2)
+            node_links[token1].append((strength, token2, link_key))
+            node_links[token2].append((strength, token1, link_key))
+        
+        # For each node, keep only top-N strongest links
+        # Use a greedy approach: process nodes and select their top links
+        selected_links = set()
+        
+        for node, links_list in node_links.items():
+            # Sort by strength (descending) and take top-N
+            top_links = sorted(links_list, key=lambda x: x[0], reverse=True)[:MAX_LINKS_PER_NODE]
+            for strength, other_node, link_key in top_links:
+                selected_links.add(link_key)
+        
+        # Convert to links array, ensuring each node respects the limit
+        # Re-process to enforce strict per-node limit
+        final_node_link_count = defaultdict(int)
+        final_links = []
+        
+        # Sort all selected links by strength (stronger links get priority)
+        all_links_sorted = sorted(
+            [(strength, token1, token2) for (token1, token2), strength in filtered_links.items() if (token1, token2) in selected_links],
+            key=lambda x: x[0],
+            reverse=True
+        )
+        
+        for strength, token1, token2 in all_links_sorted:
+            # Only add if both nodes haven't reached their limit
+            if final_node_link_count[token1] < MAX_LINKS_PER_NODE and final_node_link_count[token2] < MAX_LINKS_PER_NODE:
+                final_links.append({
+                    "source": token1,
+                    "target": token2,
+                    "value": strength
+                })
+                final_node_link_count[token1] += 1
+                final_node_link_count[token2] += 1
+        
+        links.extend(final_links)
         
         return {
             "nodes": nodes,
