@@ -300,31 +300,12 @@ class IdentityVault:
         filtered_links = {k: v for k, v in link_strength.items() if v >= MIN_COOCCURRENCE_THRESHOLD}
         
         # Safeguard: Limit to top-N strongest links per node
-        # Build adjacency list for each node
-        node_links = defaultdict(list)  # node -> [(strength, other_node, link_key)]
-        for (token1, token2), strength in filtered_links.items():
-            link_key = (token1, token2)
-            node_links[token1].append((strength, token2, link_key))
-            node_links[token2].append((strength, token1, link_key))
-        
-        # For each node, keep only top-N strongest links
-        # Use a greedy approach: process nodes and select their top links
-        selected_links = set()
-        
-        for node, links_list in node_links.items():
-            # Sort by strength (descending) and take top-N
-            top_links = sorted(links_list, key=lambda x: x[0], reverse=True)[:MAX_LINKS_PER_NODE]
-            for strength, other_node, link_key in top_links:
-                selected_links.add(link_key)
-        
-        # Convert to links array, ensuring each node respects the limit
-        # Re-process to enforce strict per-node limit
+        # Use a greedy algorithm: prioritize stronger links and enforce strict per-node limit
         final_node_link_count = defaultdict(int)
-        final_links = []
         
-        # Sort all selected links by strength (stronger links get priority)
+        # Sort all filtered links by strength (stronger links get priority)
         all_links_sorted = sorted(
-            [(strength, token1, token2) for (token1, token2), strength in filtered_links.items() if (token1, token2) in selected_links],
+            [(strength, token1, token2) for (token1, token2), strength in filtered_links.items()],
             key=lambda x: x[0],
             reverse=True
         )
@@ -332,15 +313,13 @@ class IdentityVault:
         for strength, token1, token2 in all_links_sorted:
             # Only add if both nodes haven't reached their limit
             if final_node_link_count[token1] < MAX_LINKS_PER_NODE and final_node_link_count[token2] < MAX_LINKS_PER_NODE:
-                final_links.append({
+                links.append({
                     "source": token1,
                     "target": token2,
                     "value": strength
                 })
                 final_node_link_count[token1] += 1
                 final_node_link_count[token2] += 1
-        
-        links.extend(final_links)
         
         return {
             "nodes": nodes,
