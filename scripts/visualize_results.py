@@ -3,15 +3,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from collections import defaultdict
 
-RESULTS_PATH = "data/test_results.json"
-OUTPUT_PLOT = "evaluation_metrics_grouped.png"
+RESULTS_PATH = "../data/test_results.json"
+OUTPUT_PLOT = "../evaluation_metrics_grouped.png"
 
 def visualize():
     try:
         with open(RESULTS_PATH, 'r') as f:
             results = json.load(f)
     except FileNotFoundError:
-        print(f"❌ Results file not found: {RESULTS_PATH}")
+        print(f" Results file not found: {RESULTS_PATH}")
         return
 
     # Aggregate data by type
@@ -74,7 +74,6 @@ def visualize():
 
     plt.tight_layout()
     plt.savefig(OUTPUT_PLOT)
-    print(f"\n✅ Grouped Plot saved to {OUTPUT_PLOT}")
 
 if __name__ == "__main__":
     visualize()

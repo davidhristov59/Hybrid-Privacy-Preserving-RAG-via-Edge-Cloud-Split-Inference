@@ -91,27 +91,25 @@ The dashboard will be available at `http://localhost:5173`.
 
 ## Testing & Evaluation
 
-This project includes a comprehensive automated testing suite to evaluate retrieval accuracy, semantic similarity (BERTScore), and privacy preservation (PPS).
+This project includes a comprehensive automated adversarial testing suite (`data/test_data_llm.json`) containing **50+ LLM-generated questions** across 13 categories (e.g., Simple Retrieval, Multi-hop, Inference, Privacy Attacks, Safety Checks).
 
-### 1. Generate Test Data
-Create diverse questions from your raw CSV/PDF data:
-```bash
-python scripts/generate_test_data.py
-```
-
-### 2. Run the Test Suite
-Execute the tests against the running API:
+### 1. Run the Test Suite
+Ensure the backend API is running (`python app.py`), then execute:
 ```bash
 python scripts/run_tests.py
 ```
-This calculates **ROUGE**, **BLEU**, **METEOR**, **BERTScore**, and **Privacy Preservation Score (PPS)**.
+This script:
+- Sends 50 questions to the Chatbot.
+- Compares answers against the "Ground Truth".
+- Calculates **ROUGE**, **BLEU**, **BERTScore** (Semantic Similarity), and **Privacy Preservation Score (PPS)**.
+- Saves detailed results to `data/test_results.json`.
 
-### 3. Visualize Results
-Generate performance plots:
+### 2. Visualize Results
+Generate a grouped performance bar chart:
 ```bash
 python scripts/visualize_results.py
 ```
-Outputs: `evaluation_metrics.png`
+Outputs: `evaluation_metrics_grouped.png` (Shows performance by category, highlighting robustness against attacks).
 
 ## Project Structure
 
