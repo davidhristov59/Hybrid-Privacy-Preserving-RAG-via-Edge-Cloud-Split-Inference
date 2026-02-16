@@ -56,7 +56,7 @@ Based on the methodology established in **Wei et al. (IEEE, 2025)**:
 
 4. Download Spacy models:
    ```bash
-   python -m spacy download en_core_web_sm
+   python -m spacy download en_core_web_lg
    ```
 
 ## Running the Application
