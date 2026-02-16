@@ -7,3 +7,18 @@ edge/vault/identity_vault.json
 cloud/vector_db/
 .DS_Store
 .venv/
+
+# Build and Dependency artifacts
+node_modules/
+dist/
+build/
+
+# Logs
+*.log
+backend.log
+frontend/frontend.log
+frontend/react_fe.log
+
+# IDEs
+.idea/
+.vscode/
