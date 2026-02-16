@@ -6,6 +6,7 @@ import { ChatPage } from "./pages/ChatPage";
 import { KBPage } from "./pages/KBPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { EvaluatePage } from "./pages/EvaluatePage";
+import { GraphPage } from "./pages/GraphPage";
 import { apiFetch } from "./utils/api";
 
 export default function App() {
@@ -34,6 +35,7 @@ export default function App() {
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/knowledge_base" element={<KBPage stats={stats} showToast={showToast} refreshStats={fetchStats} />} />
             <Route path="/evaluate" element={<EvaluatePage />} />
+            <Route path="/graph" element={<GraphPage />} />
           </Routes>
         </div>
       </div>

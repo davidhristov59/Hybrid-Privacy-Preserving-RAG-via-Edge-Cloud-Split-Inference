@@ -220,3 +220,82 @@ class IdentityVault:
             "LANGUAGE": "Lang"
         }
         return mapping.get(entity_type.upper(), "Entity")
+
+    def serialize_for_graph(self):
+        """
+        Serializes the Identity Vault into a graph structure for visualization.
+        
+        Returns:
+            dict: Graph data with nodes and links structure:
+                - nodes: List of {id, label, type, group, color, sources}
+                - links: List of {source, target, value} where entities share sources
+        """
+        nodes = []
+        links = []
+        
+        # Color mapping for different entity types
+        type_colors = {
+            "Person": "#3b82f6",      # Blue
+            "Org": "#10b981",         # Green
+            "Location": "#f59e0b",    # Amber
+            "Date": "#8b5cf6",        # Purple
+            "Time": "#ec4899",        # Pink
+            "Money": "#14b8a6",       # Teal
+            "Number": "#6366f1",      # Indigo
+            "Facility": "#84cc16",    # Lime
+            "Group": "#f97316",       # Orange
+            "Product": "#06b6d4",     # Cyan
+            "Event": "#a855f7",       # Purple
+            "Work": "#d946ef",        # Fuchsia
+            "Law": "#0ea5e9",         # Sky
+            "Lang": "#22c55e",        # Green
+            "Entity": "#64748b"       # Slate (default)
+        }
+        
+        # 1. Build nodes from metadata
+        for token, meta in self.metadata.items():
+            entity_type = meta.get("type", "UNKNOWN")
+            prefix = self._map_entity_type_to_prefix(entity_type)
+            sources = meta.get("sources", [])
+            
+            node = {
+                "id": token,
+                "label": token,
+                "type": prefix,
+                "group": prefix,
+                "color": type_colors.get(prefix, type_colors["Entity"]),
+                "sources": sources,
+                "val": len(sources) + 1  # Node size based on number of sources
+            }
+            nodes.append(node)
+        
+        # 2. Build links based on co-occurrence in source documents
+        # Create a map of source -> tokens
+        source_to_tokens = defaultdict(list)
+        for token, meta in self.metadata.items():
+            for source in meta.get("sources", []):
+                source_to_tokens[source].append(token)
+        
+        # Create links between tokens that share sources
+        link_strength = {}  # (token1, token2) -> count of shared sources
+        
+        for source, tokens in source_to_tokens.items():
+            # Create links between all pairs of tokens in this source
+            for i in range(len(tokens)):
+                for j in range(i + 1, len(tokens)):
+                    token1, token2 = sorted([tokens[i], tokens[j]])
+                    key = (token1, token2)
+                    link_strength[key] = link_strength.get(key, 0) + 1
+        
+        # Convert to links array
+        for (source, target), strength in link_strength.items():
+            links.append({
+                "source": source,
+                "target": target,
+                "value": strength  # Thickness of link based on co-occurrence count
+            })
+        
+        return {
+            "nodes": nodes,
+            "links": links
+        }

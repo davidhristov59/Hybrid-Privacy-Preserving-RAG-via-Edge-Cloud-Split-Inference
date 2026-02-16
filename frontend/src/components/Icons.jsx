@@ -72,6 +72,15 @@ export const FilterIcon = ({ size = 16 }) => (
     <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
   </svg>
 );
+export const NetworkIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="5" r="3"></circle>
+    <circle cx="5" cy="19" r="3"></circle>
+    <circle cx="19" cy="19" r="3"></circle>
+    <line x1="12" y1="8" x2="5" y2="16"></line>
+    <line x1="12" y1="8" x2="19" y2="16"></line>
+  </svg>
+);
 export const FileIcon = ({ type, size = 20 }) => {
   const color = type === 'pdf' ? 'var(--red)' : 'var(--green)';
   return (
