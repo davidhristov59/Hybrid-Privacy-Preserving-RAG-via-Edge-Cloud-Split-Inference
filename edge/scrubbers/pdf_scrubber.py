@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 # Add parent directory to path to import vault
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-sys.path.insert(0, project_root)
+# project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+# sys.path.insert(0, project_root)
 
 from edge.vault.mapping_db import IdentityVault
 
