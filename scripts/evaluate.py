@@ -9,7 +9,12 @@ import sys
 from rouge_score import rouge_scorer
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 from nltk.translate.meteor_score import meteor_score
+from bert_score import score as bert_score_func
 import nltk
+import logging
+
+# Suppress some transformers warnings
+logging.getLogger("transformers").setLevel(logging.ERROR)
 
 # Ensure NLTK data
 try:
@@ -26,6 +31,20 @@ class Evaluator:
         self.rouge_scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
         self.chencherry = SmoothingFunction()    
 
+    def calculate_bert_score(self, prediction, reference):
+        """Calculates BERTScore (F1)."""
+        # BERTScore expects lists of strings
+        # We use a small efficient model by default to keep it fast, e.g., distilbert-base-uncased
+        # or let it default (roberta-large) which might be slow. 
+        # Let's use 'microsoft/deberta-xlarge-mnli' or just default 'roberta-large' if machine handles it.
+        # For speed in this test env, we might want 'distilbert-base-uncased'.
+        # However, accurate semantic similarity usually needs a good model.
+        try:
+            P, R, F1 = bert_score_func([prediction], [reference], lang="en", verbose=False, model_type="distilbert-base-uncased")
+            return F1.mean().item()
+        except Exception as e:
+            print(f"⚠️ BERTScore failed: {e}")
+            return 0.0
 
     def calculate_rouge(self, prediction, reference):
         """Calculates ROUGE-1, ROUGE-2, ROUGE-L."""
@@ -99,12 +118,16 @@ class Evaluator:
         # 3. METEOR
         meteor = self.calculate_meteor(prediction, reference)
 
+        # 4. BERTScore
+        bert = self.calculate_bert_score(prediction, reference)
+
         results = {
             "ROUGE-1": round(rouge["rouge1"], 4),
             "ROUGE-2": round(rouge["rouge2"], 4),
             "ROUGE-L": round(rouge["rougeL"], 4),
             "BLEU-4": round(bleu, 4),
             "METEOR": round(meteor, 4),
+            "BERTScore": round(bert, 4)
         }
 
         # 4. Privacy Metrics (Optional)

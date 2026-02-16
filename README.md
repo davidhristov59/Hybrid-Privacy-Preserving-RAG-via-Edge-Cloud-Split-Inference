@@ -89,6 +89,30 @@ npm run dev
 
 The dashboard will be available at `http://localhost:5173`.
 
+## Testing & Evaluation
+
+This project includes a comprehensive automated testing suite to evaluate retrieval accuracy, semantic similarity (BERTScore), and privacy preservation (PPS).
+
+### 1. Generate Test Data
+Create diverse questions from your raw CSV/PDF data:
+```bash
+python scripts/generate_test_data.py
+```
+
+### 2. Run the Test Suite
+Execute the tests against the running API:
+```bash
+python scripts/run_tests.py
+```
+This calculates **ROUGE**, **BLEU**, **METEOR**, **BERTScore**, and **Privacy Preservation Score (PPS)**.
+
+### 3. Visualize Results
+Generate performance plots:
+```bash
+python scripts/visualize_results.py
+```
+Outputs: `evaluation_metrics.png`
+
 ## Project Structure
 
 ```bash

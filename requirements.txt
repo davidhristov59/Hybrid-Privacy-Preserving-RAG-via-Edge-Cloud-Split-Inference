@@ -22,3 +22,5 @@ evaluate
 datasets
 transformers
 accelerate
+matplotlib
+bert-score
