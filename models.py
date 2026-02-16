@@ -25,3 +25,9 @@ class DocumentInfo(BaseModel):
     file_type: str
     size_bytes: int
     path: str
+
+class EvaluationRequest(BaseModel):
+    question: str
+    generated_answer: str
+    reference_answer: str
+    masked_context: Optional[str] = None

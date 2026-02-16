@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { ShieldIcon, ChatIcon, FolderIcon, LockIcon, CheckIcon } from "../components/Icons";
 import { StatCard } from "../components/StatCard";
 
@@ -21,7 +22,7 @@ export const DashboardPage = ({ stats }) => {
         </div>
       </header>
 
-      <main className="p-8 max-w-6xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <main className="p-8 max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
         {/* Top Level Metrics */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <StatCard 
@@ -39,10 +40,10 @@ export const DashboardPage = ({ stats }) => {
           />
         </section>
 
+        {/* Row 1: Breakdown & Health */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content: Entity Breakdown */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-card border border-border rounded-2xl p-8 shadow-sm">
+          <div className="lg:col-span-2">
+            <div className="bg-card border border-border rounded-2xl p-8 shadow-sm h-full">
               <div className="flex items-center justify-between mb-8">
                 <div>
                   <h3 className="text-base font-semibold text-foreground">Identity Vault Breakdown</h3>
@@ -65,35 +66,12 @@ export const DashboardPage = ({ stats }) => {
                 </div>
               )}
             </div>
-
-            {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <a href="/chat" className="group p-6 bg-card border border-border rounded-2xl hover:border-primary/50 transition-all shadow-sm flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                  <ChatIcon size={24} />
-                </div>
-                <div>
-                  <div className="font-semibold text-sm">Start Secure Chat</div>
-                  <div className="text-xs text-muted-foreground">Ask questions about your data</div>
-                </div>
-              </a>
-              <a href="/knowledge_base" className="group p-6 bg-card border border-border rounded-2xl hover:border-primary/50 transition-all shadow-sm flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                  <FolderIcon size={24} />
-                </div>
-                <div>
-                  <div className="font-semibold text-sm">Manage Documents</div>
-                  <div className="text-xs text-muted-foreground">Upload and index new files</div>
-                </div>
-              </a>
-            </div>
           </div>
 
-          {/* Sidebar: System Logs / Status */}
-          <div className="lg:col-span-1 space-y-6">
-            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+          <div className="lg:col-span-1">
+            <div className="bg-card border border-border rounded-2xl p-8 shadow-sm h-full">
               <h3 className="text-sm font-semibold text-foreground mb-6 uppercase tracking-wider">System Health</h3>
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {[
                   { label: "Edge Processor", status: "Operational" },
                   { label: "Identity Vault", status: "Locked" },
@@ -110,20 +88,44 @@ export const DashboardPage = ({ stats }) => {
                 ))}
               </div>
             </div>
+          </div>
+        </div>
 
-            <div className="bg-zinc-950/50 border border-border rounded-2xl p-6 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <LockIcon size={48} />
-              </div>
-              <h4 className="text-[10px] font-bold text-primary uppercase tracking-widest mb-2">Zero-Trust Protocol</h4>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Tokens are deterministic and unique to your local vault. No raw PII strings or embeddings are ever transmitted.
-              </p>
-              <div className="mt-4 flex items-center gap-2">
-                <CheckIcon size={12} className="text-emerald-500" />
-                <span className="text-[9px] font-mono text-emerald-500 uppercase tracking-tighter font-bold text-shadow-glow">Verified Security</span>
+        {/* Row 2: Chat, Documents, and Zero-Trust Protocol aligned in the same line */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Link to="/chat" className="group p-6 bg-card border border-border rounded-2xl hover:border-primary/50 transition-all shadow-sm flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors shrink-0">
+              <ChatIcon size={24} />
+            </div>
+            <div>
+              <div className="font-semibold text-sm">Start Secure Chat</div>
+              <div className="text-xs text-muted-foreground">Ask questions about your data</div>
+            </div>
+          </Link>
+
+          <Link to="/knowledge_base" className="group p-6 bg-card border border-border rounded-2xl hover:border-primary/50 transition-all shadow-sm flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors shrink-0">
+              <FolderIcon size={24} />
+            </div>
+            <div>
+              <div className="font-semibold text-sm">Manage Documents</div>
+              <div className="text-xs text-muted-foreground">Upload and index new files</div>
+            </div>
+          </Link>
+
+          <div className="bg-zinc-950/50 border border-border rounded-2xl p-6 relative overflow-hidden group flex flex-col justify-center">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+              <LockIcon size={32} />
+            </div>
+            <div className="flex items-center gap-2 mb-2">
+              <h4 className="text-[10px] font-bold text-primary uppercase tracking-widest">Zero-Trust Protocol</h4>
+              <div className="flex items-center gap-1 bg-emerald-500/10 px-1.5 py-0.5 rounded text-[8px] font-mono text-emerald-500 uppercase font-bold border border-emerald-500/20">
+                <CheckIcon size={8} /> Verified
               </div>
             </div>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              PII strings are redacted locally. No raw data ever leaves your device.
+            </p>
           </div>
         </div>
       </main>

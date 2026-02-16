@@ -19,7 +19,7 @@ logger.info("Starting API...")
 
 logger.info("Importing models...")
 from typing import List
-from models import ChatInput, ChatResponse, VaultStats, DocumentUploadResponse, DocumentInfo
+from models import ChatInput, ChatResponse, VaultStats, DocumentUploadResponse, DocumentInfo, EvaluationRequest
 
 logger.info("Importing llm_service...")
 from cloud.llm_interface import llm_service
@@ -45,9 +45,21 @@ vault = IdentityVault()
 reconstructor = Reconstructor()
 # We use TextScrubber for query masking (it has access to Vault)
 query_scrubber = TextScrubber()
+evaluator = None
+
+def get_evaluator():
+    global evaluator
+    if evaluator is None:
+        try:
+            from scripts.evaluate import Evaluator
+            evaluator = Evaluator()
+        except ImportError:
+            logger.error("Could not import Evaluator. Evaluation metrics unavailable.")
+    return evaluator
 
 
-@asynccontextmanager
+
+
 async def lifespan(app: FastAPI):
     # Startup logic
     logger.info("Service started. Verifying directories...")
@@ -83,6 +95,30 @@ app.add_middleware(
 @app.get("/")
 def read_root():
     return {"message": "Hybrid Privacy RAG API is running. Visit /docs for API documentation."}
+
+
+@app.post("/evaluate")
+def evaluate_query(payload: EvaluationRequest):
+    """
+    Evaluates a generated answer against a reference answer using ROUGE/BLEU/METEOR.
+    Also calculates Privacy Scores if masked_context is provided.
+    """
+    eval_tool = get_evaluator()
+    if not eval_tool:
+        raise HTTPException(status_code=503, detail="Evaluator not initialized.")
+
+    # Get vault map for privacy calculations
+    vault_map = vault.forward_mapping if vault.forward_mapping else None
+
+    # Run evaluation
+    results = eval_tool.evaluate(
+        prediction=payload.generated_answer,
+        reference=payload.reference_answer,
+        masked_context=payload.masked_context,
+        identity_map=vault_map
+    )
+    
+    return results
 
 
 @app.get("/health")

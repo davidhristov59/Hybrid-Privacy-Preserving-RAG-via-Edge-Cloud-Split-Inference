@@ -1,11 +1,12 @@
 import { NavLink } from "react-router-dom";
-import { ShieldIcon, ChatIcon, FolderIcon, GridIcon } from "./Icons";
+import { ShieldIcon, ChatIcon, FolderIcon, GridIcon, ActivityIcon } from "./Icons";
 
 export const Sidebar = ({ stats }) => {
   const links = [
     { to: "/dashboard",      label: "Overview",       icon: <GridIcon size={16} /> },
     { to: "/chat",           label: "Secure Chat",    icon: <ChatIcon size={16} /> },
     { to: "/knowledge_base", label: "Documents",      icon: <FolderIcon size={16} /> },
+    { to: "/evaluate",       label: "Evaluation",     icon: <ActivityIcon size={16} /> },
   ];
 
   return (

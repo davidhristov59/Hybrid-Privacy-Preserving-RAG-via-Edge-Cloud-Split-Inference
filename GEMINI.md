@@ -10,21 +10,46 @@ This project implements a secure **Retrieval-Augmented Generation (RAG)** framew
 - **Edge-Cloud Split Inference:** Anonymization and reconstruction occur at the **Edge**; the **Cloud** processes only masked tokens.
 - **Hybrid Knowledge Synthesis:** Links facts across different data formats (e.g., PDF medical history + CSV lab results).
 - **Zero-Trust Security:** Prevents Embedding Inversion Attacks; raw sensitive text is never converted to cloud-stored vectors.
+- **Evaluation Framework:** Built-in metrics for Generation Quality (ROUGE, BLEU, METEOR) and Privacy Preservation (PPS, Reconstruction Accuracy).
 
 ## Technical Stack
 
-- **Language:** Python 3.9+
+- **Backend:** Python 3.9+, FastAPI
+- **Frontend:** React, Vite, Tailwind CSS
 - **NER:** Spacy (`en_core_web_sm`)
-- **Orchestration:** LangChain / LlamaIndex
-- **Vector Storage:** FAISS or Pinecone
-- **LLM Interface:** OpenAI / Gemini / Azure (Cloud-side)
+- **Orchestration:** LangChain
+- **Vector Storage:** FAISS / Pinecone
+- **LLM Interface:** OpenAI / Gemini (Cloud-side)
+
+## Project Structure
+
+```bash
+├── app.py                   # FastAPI Backend Server (Entry point for UI)
+├── main.py                  # CLI Orchestrator (Offline Preparation/Scrubbing)
+├── models.py                # Pydantic models for API
+├── scripts/                 # Utility scripts (Evaluation, etc.)
+│   └── evaluate.py          # ROUGE/BLEU/METEOR & Privacy metrics
+├── data/
+│   ├── raw/                 # Original CSVs and PDFs (Local)
+│   └── processed/           # Masked/Anonymized data (Cloud-ready)
+├── edge/                    # Local environment (The "Safe Zone")
+│   ├── vault/               # Local Identity Vault (PMR-KB)
+│   ├── scrubbers/           # NER maskers for PDF/CSV
+│   └── reconstructor.py     # De-anonymization logic
+├── cloud/                   # Simulated Cloud environment
+│   ├── vector_db/           # Vector store for masked embeddings
+│   └── llm_interface.py     # Cloud LLM Integration
+├── frontend/                # React Dashboard (Vite + Tailwind)
+└── requirements.txt         # Python dependencies
+```
 
 ## Setup Instructions
 
 ### Prerequisites
-Ensure you have Python 3.9+ installed.
+- Python 3.9+
+- Node.js & npm (for Frontend)
 
-### Installation
+### 1. Backend Setup
 
 1.  **Clone the repository:**
     ```bash
@@ -35,55 +60,62 @@ Ensure you have Python 3.9+ installed.
 2.  **Create and activate virtual environment:**
     ```bash
     python -m venv .venv
-    source .venv/bin/activate
+    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
     ```
 
 3.  **Install dependencies:**
     ```bash
     pip install -r requirements.txt
-    ```
-
-4.  **Download Spacy model:**
-    ```bash
     python -m spacy download en_core_web_sm
     ```
 
-## Usage Examples
+4.  **Start the Backend:**
+    ```bash
+    python app.py
+    ```
+    *The API will run at `http://localhost:8000`.*
 
-### 1. Preparation Phase (Offline Indexing)
-Load, scan, and mask your sensitive documents before cloud upload.
+### 2. Frontend Setup
+
+1.  **Navigate to frontend directory:**
+    ```bash
+    cd frontend
+    ```
+
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+
+3.  **Start the Development Server:**
+    ```bash
+    npm run dev
+    ```
+    *The UI will run at `http://localhost:5173`.*
+
+## Usage Workflow
+
+### 1. Document Ingestion (Preparation Phase)
+You can upload documents via the Web UI ("Knowledge Base" page) or process them offline using the CLI:
 
 ```bash
-# Example: Process a PDF file
-python edge/scrubbers/pdf_scrubber.py data/raw/pdf/patient_record.pdf
-
-# Example: Process a CSV file
-python edge/scrubbers/csv_scrubber.py data/raw/csv/lab_results.csv
+# Offline processing of all files in data/raw/
+python main.py --phase prep
 ```
-*Output: Masked files saved to `data/processed/` (e.g., `patient_record_masked.md`).*
+*This masks sensitive data and saves anonymized versions to `data/processed/`.*
 
-### 2. Query Phase (Real-time Inference)
-Run the main orchestrator to perform secure RAG queries.
-
-```bash
-python main.py
-```
-*Workflow:*
+### 2. Secure Chat (Query Phase)
+Use the "Chat" page in the Web UI.
 1.  **User Query:** "What are Marko's lab results?"
 2.  **Edge Masking:** Converts to "What are Person_A's lab results?"
-3.  **Cloud Retrieval:** Fetches masked context for `Person_A`.
+3.  **Cloud Retrieval:** Fetches masked context.
 4.  **Cloud Generation:** LLM generates masked response.
 5.  **Edge Reconstruction:** Restores "Marko" from `Person_A`.
-6.  **Final Output:** "Marko's results: Normal blood sugar"
 
-## Contribution Guidelines
-
-Contributions are welcome! Please follow these steps:
-1.  Fork the repository.
-2.  Create a feature branch (`git checkout -b feature/AmazingFeature`).
-3.  Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-4.  Push to the branch (`git push origin feature/AmazingFeature`).
-5.  Open a Pull Request.
+### 3. Evaluation
+Use the "Evaluation" page in the Web UI to test the system's performance.
+*   **Generation Metrics:** ROUGE, BLEU, METEOR.
+*   **Privacy Metrics:** Privacy Preservation Score (PPS) & Reconstruction Accuracy.
 
 ## License Information
 

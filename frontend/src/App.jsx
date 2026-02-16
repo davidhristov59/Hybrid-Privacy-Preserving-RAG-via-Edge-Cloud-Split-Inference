@@ -5,6 +5,7 @@ import { Sidebar } from "./components/Sidebar";
 import { ChatPage } from "./pages/ChatPage";
 import { KBPage } from "./pages/KBPage";
 import { DashboardPage } from "./pages/DashboardPage";
+import { EvaluatePage } from "./pages/EvaluatePage";
 import { apiFetch } from "./utils/api";
 
 export default function App() {
@@ -32,6 +33,7 @@ export default function App() {
             <Route path="/dashboard" element={<DashboardPage stats={stats} />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/knowledge_base" element={<KBPage stats={stats} showToast={showToast} refreshStats={fetchStats} />} />
+            <Route path="/evaluate" element={<EvaluatePage />} />
           </Routes>
         </div>
       </div>
