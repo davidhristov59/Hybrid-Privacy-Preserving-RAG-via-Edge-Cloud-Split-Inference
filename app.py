@@ -1,15 +1,25 @@
 import shutil
 import os
+import uvicorn
 import logging
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from typing import List
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
-import os
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+
+# Models and Services
+from models import ChatInput, ChatResponse, VaultStats, DocumentUploadResponse, DocumentInfo, EvaluationRequest
+from cloud.llm_interface import llm_service
+from edge.reconstructor import Reconstructor
+from edge.vault.mapping_db import IdentityVault
+from edge.scrubbers.pdf_scrubber import TextScrubber
+from edge.scrubbers.csv_scrubber import CSVScrubber
+from cloud.vector_db.indexer import index_documents
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
-# Load env vars immediately
+# Load env vars
 load_dotenv()
 
 # Setup logging
@@ -17,33 +27,9 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("api")
 logger.info("Starting API...")
 
-logger.info("Importing models...")
-from typing import List
-from models import ChatInput, ChatResponse, VaultStats, DocumentUploadResponse, DocumentInfo, EvaluationRequest
-
-logger.info("Importing llm_service...")
-from cloud.llm_interface import llm_service
-
-logger.info("Importing Reconstructor...")
-from edge.reconstructor import Reconstructor
-
-logger.info("Importing IdentityVault...")
-from edge.vault.mapping_db import IdentityVault
-
-logger.info("Importing TextScrubber...")
-from edge.scrubbers.pdf_scrubber import TextScrubber
-
-logger.info("Importing CSVScrubber...")
-from edge.scrubbers.csv_scrubber import CSVScrubber
-
-logger.info("Importing index_documents...")
-from cloud.vector_db.indexer import index_documents
-
 # Initialize components
-logger.info("Initializing components...")
 vault = IdentityVault()
 reconstructor = Reconstructor()
-# We use TextScrubber for query masking (it has access to Vault)
 query_scrubber = TextScrubber()
 evaluator = None
 
@@ -217,6 +203,17 @@ def get_vault_stats():
         last_updated="Just now"
     )
 
+@app.get("/vault/graph")
+def get_vault_graph():
+    """
+    Returns graph data (nodes and links) based on the Identity Vault.
+    Nodes: Masked Tokens (e.g., Person_A)
+    Links: Co-occurrence in the same source document.
+    """
+    vault.load_vault()
+    
+    return vault.serialize_for_graph()
+
 
 @app.post("/chat", response_model=ChatResponse)
 def chat_endpoint(payload: ChatInput):
@@ -319,6 +316,4 @@ async def upload_document(file: UploadFile = File(...)):
 
 
 if __name__ == "__main__":
-    import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=8000)
