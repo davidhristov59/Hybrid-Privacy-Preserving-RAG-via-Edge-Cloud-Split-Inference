@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import ForceGraph2D from "react-force-graph-2d";
 import { Network, X, ZoomIn, ZoomOut, RotateCcw, Info, Maximize2, Minimize2 } from "lucide-react";
 import { apiFetch } from "../utils/api";
@@ -32,18 +32,23 @@ export function GraphPage() {
   }, []);
 
   // Filter nodes based on type
-  const filteredData = {
-    nodes: nodeFilter === "all" 
-      ? graphData.nodes 
-      : graphData.nodes.filter(n => n.type === nodeFilter),
-    links: nodeFilter === "all"
+  const filteredData = useMemo(() => {
+  const filteredNodes =
+    nodeFilter === "all"
+      ? graphData.nodes
+      : graphData.nodes.filter((n) => n.type === nodeFilter);
+  const filteredNodeIds = new Set(filteredNodes.map((n) => n.id));
+  
+  const filteredLinks =
+    nodeFilter === "all"
       ? graphData.links
-      : graphData.links.filter(l => {
-          const sourceNode = graphData.nodes.find(n => n.id === l.source || n.id === l.source.id);
-          const targetNode = graphData.nodes.find(n => n.id === l.target || n.id === l.target.id);
-          return sourceNode?.type === nodeFilter || targetNode?.type === nodeFilter;
-        })
-  };
+      : graphData.links.filter((l) => {
+          const sourceId = typeof l.source === "object" ? l.source.id : l.source;
+          const targetId = typeof l.target === "object" ? l.target.id : l.target;
+          return filteredNodeIds.has(sourceId) && filteredNodeIds.has(targetId);
+        });
+  return { nodes: filteredNodes, links: filteredLinks };
+}, [graphData, nodeFilter]);
 
   // Get unique entity types for filtering
   const entityTypes = ["all", ...new Set(graphData.nodes.map(n => n.type))];
@@ -249,6 +254,7 @@ export function GraphPage() {
             <button
               onClick={() => setSelectedNode(null)}
               className="p-2 hover:bg-background/50 rounded-lg transition-colors"
+              aria-label="Close details"
             >
               <X size={20} />
             </button>
@@ -317,7 +323,7 @@ export function GraphPage() {
                   <ul className="space-y-2">
                     {connected.map((node, idx) => (
                       <li
-                        key={idx}
+                        key={node.id}
                         className="flex items-center justify-between p-2 bg-background/30 rounded hover:bg-accent/10 transition-colors cursor-pointer"
                         onClick={() => handleNodeClick(node)}
                       >

@@ -1,15 +1,25 @@
 import shutil
 import os
+import uvicorn
 import logging
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from typing import List
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
-import os
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+
+# Models and Services
+from models import ChatInput, ChatResponse, VaultStats, DocumentUploadResponse, DocumentInfo, EvaluationRequest
+from cloud.llm_interface import llm_service
+from edge.reconstructor import Reconstructor
+from edge.vault.mapping_db import IdentityVault
+from edge.scrubbers.pdf_scrubber import TextScrubber
+from edge.scrubbers.csv_scrubber import CSVScrubber
+from cloud.vector_db.indexer import index_documents
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
-# Load env vars immediately
+# Load env vars
 load_dotenv()
 
 # Setup logging
@@ -17,33 +27,9 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("api")
 logger.info("Starting API...")
 
-logger.info("Importing models...")
-from typing import List
-from models import ChatInput, ChatResponse, VaultStats, DocumentUploadResponse, DocumentInfo, EvaluationRequest
-
-logger.info("Importing llm_service...")
-from cloud.llm_interface import llm_service
-
-logger.info("Importing Reconstructor...")
-from edge.reconstructor import Reconstructor
-
-logger.info("Importing IdentityVault...")
-from edge.vault.mapping_db import IdentityVault
-
-logger.info("Importing TextScrubber...")
-from edge.scrubbers.pdf_scrubber import TextScrubber
-
-logger.info("Importing CSVScrubber...")
-from edge.scrubbers.csv_scrubber import CSVScrubber
-
-logger.info("Importing index_documents...")
-from cloud.vector_db.indexer import index_documents
-
 # Initialize components
-logger.info("Initializing components...")
 vault = IdentityVault()
 reconstructor = Reconstructor()
-# We use TextScrubber for query masking (it has access to Vault)
 query_scrubber = TextScrubber()
 evaluator = None
 
@@ -226,39 +212,7 @@ def get_vault_graph():
     """
     vault.load_vault()
     
-    nodes = []
-    links = []
-    
-    # 1. Build Nodes
-    # We want to group by Type and give them colors/groups
-    # vault.forward_mapping = { "Marko": "Person_A", ... }
-    # But we need metadata. The vault stores metadata in a separate structure or we infer it.
-    # Current Vault implementation (from memory/context) might be simple.
-    # Let's check `edge/vault/mapping_db.py` to see if we have source info.
-    # If not, we'll iterate the mapping and try to find source.
-    # Wait, the `get_token` method accepts `source`.
-    # Let's assume the vault stores a reverse mapping or some metadata.
-    
-    # Actually, let's look at `edge/vault/identity_vault.json` structure if possible.
-    # For now, we'll do a best-effort graph construction.
-    
-    # Nodes are the Masked Tokens.
-    # We need to know who is connected to whom.
-    
-    # Let's inspect the Vault class first to be sure.
-    # But for now, we can iterate the `forward_mapping` and `token_metadata` if it exists.
-    
-    # Let's just return the nodes for now and a basic linkage strategy.
-    
-    # Strategy:
-    # 1. Get all tokens.
-    # 2. Assign group based on prefix (Person_, Condition_, etc.)
-    # 3. If we can't find source info easily, we'll just link random nodes for the demo 
-    #    OR better, we link nodes that have the same "source" if the vault tracks it.
-    
-    # Let's depend on the Vault object.
-    data = vault.serialize_for_graph()
-    return data
+    return vault.serialize_for_graph()
 
 
 @app.post("/chat", response_model=ChatResponse)
@@ -362,6 +316,4 @@ async def upload_document(file: UploadFile = File(...)):
 
 
 if __name__ == "__main__":
-    import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=8000)
