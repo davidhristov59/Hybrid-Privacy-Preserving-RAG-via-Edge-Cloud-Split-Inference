@@ -36,8 +36,10 @@ def get_evaluator():
         try:
             from scripts.evaluate import Evaluator
             evaluator = Evaluator()
-        except ImportError:
-            logger.error("Could not import Evaluator. Evaluation metrics unavailable.")
+        except ImportError as e:
+            logger.error(f"Could not import Evaluator. Evaluation metrics unavailable. Error: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error when initializing Evaluator: {e}")
     return evaluator
 
 
