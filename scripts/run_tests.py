@@ -4,7 +4,6 @@ import requests
 import sys
 import os
 
-# Add project root to sys.path so we can import modules
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from scripts.evaluate import Evaluator
