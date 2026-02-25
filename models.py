@@ -3,7 +3,7 @@ from typing import List, Optional, Dict
 
 class ChatInput(BaseModel):
     message: str
-    history: Optional[List[Dict[str, str]]] = [] # List of {"role": "user", "content": "..."}
+    history: Optional[List[Dict[str, str]]] = []
 
 class ChatResponse(BaseModel):
     response: str

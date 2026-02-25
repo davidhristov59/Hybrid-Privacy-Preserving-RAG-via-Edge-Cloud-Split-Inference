@@ -5,7 +5,6 @@ from datetime import datetime
 
 VAULT_PATH = os.getenv("VAULT_PATH", "edge/vault/identity_vault.json")
 
-# Graph serialization performance safeguards
 MAX_ENTITIES_PER_SOURCE = int(os.getenv("MAX_ENTITIES_PER_SOURCE", "50"))  # Cap entities per source for link generation
 MIN_COOCCURRENCE_THRESHOLD = int(os.getenv("MIN_COOCCURRENCE_THRESHOLD", "1"))  # Minimum shared sources to create a link
 MAX_LINKS_PER_NODE = int(os.getenv("MAX_LINKS_PER_NODE", "20"))  # Top-N strongest links per node
@@ -22,9 +21,6 @@ class IdentityVault:
     def __init__(self, vault_path=VAULT_PATH):
         """
         Initializes the Identity Vault.
-        
-        Args:
-            vault_path (str): Path to the JSON file storing the vault data.
         """
         if self._initialized:
             return
@@ -79,15 +75,7 @@ class IdentityVault:
         """
         Gets the anonymized token for a given entity text.
         If the entity already exists in the vault, returns the existing token (deterministic).
-        If not, generates a new token and saves it.
-        
-        Args:
-            original_text (str): The sensitive text (e.g., "Marko Markovski").
-            entity_type (str): The label from NER (e.g., "PERSON", "ORG").
-            source (str, optional): The filename/source where this entity was found.
-            
-        Returns:
-            str: The anonymized token (e.g., "Person_1").
+        If not, generates a new token and saves it..
         """
         if not original_text:
             return original_text
@@ -145,9 +133,6 @@ class IdentityVault:
         """
         Removes all references to a specific document from the vault.
         If an entity is only referenced by this document, the entity is removed entirely.
-        
-        Args:
-            source_filename (str): The name of the file being deleted (e.g. "report.pdf").
         """
         tokens_to_remove = []
         
@@ -192,12 +177,6 @@ class IdentityVault:
         for meta in self.metadata.values():
             # Use the 'type' field from metadata if available, or fallback/infer
             etype = meta.get("type", "UNKNOWN")
-            # We want to group by the readable prefix (e.g. "Person" instead of "PERSON")
-            # Re-use the map function or just use the raw type? 
-            # The dashboard likely expects keys like "Person", "Org".
-            # The token usually starts with "Person_", so we can split the token too.
-            # But relying on metadata type is cleaner. 
-            # Let's normalize it using the helper if possible, or just capitalize.
             prefix = self._map_entity_type_to_prefix(etype)
             counts[prefix] += 1
         return dict(counts)
@@ -229,11 +208,6 @@ class IdentityVault:
     def serialize_for_graph(self):
         """
         Serializes the Identity Vault into a graph structure for visualization.
-        
-        Returns:
-            dict: Graph data with nodes and links structure:
-                - nodes: List of {id, label, type, group, color, sources}
-                - links: List of {source, target, value} where entities share sources
         """
         nodes = []
         links = []
@@ -270,12 +244,11 @@ class IdentityVault:
                 "group": prefix,
                 "color": type_colors.get(prefix, type_colors["Entity"]),
                 "sources": sources,
-                "val": len(sources) + 1  # Node size based on number of sources
+                "val": len(sources) + 1
             }
             nodes.append(node)
         
         # 2. Build links based on co-occurrence in source documents
-        # Create a map of source -> tokens
         source_to_tokens = defaultdict(list)
         for token, meta in self.metadata.items():
             for source in meta.get("sources", []):
