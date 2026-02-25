@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-# Models and Services
 from models import ChatInput, ChatResponse, VaultStats, DocumentUploadResponse, DocumentInfo, EvaluationRequest
 from cloud.llm_interface import llm_service
 from edge.reconstructor import Reconstructor
@@ -19,10 +18,8 @@ from cloud.vector_db.indexer import index_documents
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
-# Load env vars
 load_dotenv()
 
-# Setup logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("api")
 logger.info("Starting API...")
@@ -221,8 +218,7 @@ def chat_endpoint(payload: ChatInput):
     history = payload.history or []
 
     # 1. Edge: Mask the Query AND History
-    # We need to mask the entire conversation context so the LLM understands "it", "she", "he" referring to previous entities.
-    
+
     # Helper to mask a string
     def mask_text(text):
         masked = text

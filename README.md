@@ -91,7 +91,7 @@ The dashboard will be available at `http://localhost:5173`.
 
 ## Testing & Evaluation
 
-This project includes a comprehensive automated adversarial testing suite (`data/test_data_llm.json`) containing **50+ LLM-generated questions** across 13 categories (e.g., Simple Retrieval, Multi-hop, Inference, Privacy Attacks, Safety Checks).
+This project includes a comprehensive automated adversarial testing suite (`data/test_data_llm.json`) containing **145 LLM-generated questions** across 13 categories (e.g., Simple Retrieval, Multi-hop, Inference, Privacy Attacks, Safety Checks).
 
 ### 1. Run the Test Suite
 Ensure the backend API is running (`python app.py`), then execute:
@@ -99,7 +99,7 @@ Ensure the backend API is running (`python app.py`), then execute:
 python scripts/run_tests.py
 ```
 This script:
-- Sends 50 questions to the Chatbot.
+- Sends 145 questions to the Chatbot.
 - Compares answers against the "Ground Truth".
 - Calculates **ROUGE**, **BLEU**, **BERTScore** (Semantic Similarity), and **Privacy Preservation Score (PPS)**.
 - Saves detailed results to `data/test_results.json`.

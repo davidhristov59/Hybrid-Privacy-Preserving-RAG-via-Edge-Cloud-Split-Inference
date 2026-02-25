@@ -7,7 +7,7 @@ class ChatInput(BaseModel):
 
 class ChatResponse(BaseModel):
     response: str
-    context: Optional[str] = None # Optional: return context used
+    context: Optional[str] = None
 
 class VaultStats(BaseModel):
     total_entities: int

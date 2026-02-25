@@ -14,10 +14,6 @@ logger = logging.getLogger(__name__)
 # Load environment variables
 load_dotenv()
 
-# Add parent directory to path to import vault
-# project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-# sys.path.insert(0, project_root)
-
 from edge.vault.mapping_db import IdentityVault
 
 # Use the larger model for better accuracy
@@ -67,7 +63,6 @@ class TextScrubber:
     def identify_entities(self, text):
         """
         Scans text for PII using both Spacy NER and Regex.
-        Returns a list of (text, label) tuples.
         """
         found_entities = []
 

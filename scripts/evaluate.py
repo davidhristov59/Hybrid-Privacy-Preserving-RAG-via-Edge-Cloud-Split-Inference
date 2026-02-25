@@ -5,7 +5,6 @@ import math
 import os
 import sys
 
-# Try imports
 from rouge_score import rouge_scorer
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 from nltk.translate.meteor_score import meteor_score
@@ -13,14 +12,13 @@ from bert_score import score as bert_score_func
 import nltk
 import logging
 
-# Suppress some transformers warnings
 logging.getLogger("transformers").setLevel(logging.ERROR)
 
 # Ensure NLTK data
 try:
     nltk.data.find('corpora/wordnet.zip')
 except LookupError:
-    print("📥 Downloading NLTK wordnet...")
+    print(" Downloading NLTK wordnet...")
     nltk.download('wordnet')
     nltk.download('omw-1.4')
     nltk.download('punkt')
@@ -33,17 +31,12 @@ class Evaluator:
 
     def calculate_bert_score(self, prediction, reference):
         """Calculates BERTScore (F1)."""
-        # BERTScore expects lists of strings
-        # We use a small efficient model by default to keep it fast, e.g., distilbert-base-uncased
-        # or let it default (roberta-large) which might be slow. 
-        # Let's use 'microsoft/deberta-xlarge-mnli' or just default 'roberta-large' if machine handles it.
-        # For speed in this test env, we might want 'distilbert-base-uncased'.
-        # However, accurate semantic similarity usually needs a good model.
+
         try:
             P, R, F1 = bert_score_func([prediction], [reference], lang="en", verbose=False, model_type="distilbert-base-uncased")
             return F1.mean().item()
         except Exception as e:
-            print(f"⚠️ BERTScore failed: {e}")
+            print(f" BERTScore failed: {e}")
             return 0.0
 
     def calculate_rouge(self, prediction, reference):
@@ -75,14 +68,6 @@ class Evaluator:
     def calculate_privacy_metrics(self, masked_text, final_text, identity_map):
         """
         Calculates privacy and reconstruction metrics.
-        
-        Args:
-            masked_text (str): The text sent to the cloud (should contain placeholders).
-            final_text (str): The text returned to the user (should contain real names).
-            identity_map (dict): Mapping { "Real Name": "Placeholder" }
-            
-        Returns:
-            dict: { "PPS": float, "Reconstruction_Acc": float }
         """
         if not identity_map:
             return {"PPS": 1.0, "Reconstruction_Acc": 1.0}
@@ -107,7 +92,7 @@ class Evaluator:
         }
 
     def evaluate(self, prediction, reference, masked_context=None, identity_map=None):
-        print(f"\n🔍 Evaluating...\nGenerated: {prediction[:100]}...\nReference: {reference[:100]}...")
+        print(f"\n Evaluating...\nGenerated: {prediction[:100]}...\nReference: {reference[:100]}...")
         
         # 1. ROUGE
         rouge = self.calculate_rouge(prediction, reference)
@@ -151,13 +136,12 @@ if __name__ == "__main__":
     generated_text = "Marko Markovski has been diagnosed with Type 2 Diabetes. The doctor prescribed Metformin 500mg daily."
 
     # 3. Simulation of a leak or failure (Uncomment to test)
-    # masked_text_cloud = "The patient, Marko Markovski, was diagnosed..." # PPS should drop
-    # generated_text = "Person_A has been diagnosed..." # Reconstruction Acc should drop
+
 
     # Identity Map (The Vault)
     vault_map = {
         "Marko Markovski": "Person_A",
-        "Type 2 Diabetes": "Condition_X" # Example where condition was also masked
+        "Type 2 Diabetes": "Condition_X"
     }
 
     # Run Eval
@@ -168,9 +152,6 @@ if __name__ == "__main__":
         identity_map=vault_map
     )
     
-    print("\n📊 Evaluation Results:")
+    print("\n Evaluation Results:")
     print(json.dumps(results, indent=2))
-    
-    print("\n---------------------------------------------------")
-    print("To use this script with your own data:")
-    print("python scripts/evaluate.py --file results.json")
+

@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 from edge.scrubbers.pdf_scrubber import TextScrubber
 from edge.scrubbers.csv_scrubber import CSVScrubber
 
-# Load env vars
 load_dotenv()
 
 def run_preparation_phase():
@@ -15,7 +14,7 @@ def run_preparation_phase():
     2. Masks PII using local scrubbers.
     3. Saves anonymized versions to data/processed.
     """
-    print("🚀 Starting Preparation Phase (Privacy Scrubbing)...")
+    print(" Starting Preparation Phase (Privacy Scrubbing)...")
     
     # Paths
     raw_dir = os.path.abspath("data/raw")
@@ -36,22 +35,20 @@ def run_preparation_phase():
             
             # Save all processed files to the root of processed_dir for easier indexing
             if file.lower().endswith(".pdf"):
-                print(f"📄 Found PDF: {filename}")
                 output_path = os.path.join(processed_dir, filename.replace(".pdf", "_masked.md"))
                 pdf_scrubber.process_pdf(file_path, output_path)
                 files_processed += 1
                 
             elif file.lower().endswith(".csv"):
-                print(f"📊 Found CSV: {filename}")
                 output_path = os.path.join(processed_dir, filename.replace(".csv", "_masked.md"))
                 csv_scrubber.scrub_file(file_path, output_path)
                 files_processed += 1
                 
     if files_processed == 0:
-        print("⚠️ No suitable files found in data/raw to process.")
+        print("⚠ No suitable files found in data/raw to process.")
     else:
-        print(f"✅ Preparation Phase Complete! Processed {files_processed} files.")
-        print(f"📂 Check {processed_dir} for anonymized data.")
+        print(f" Preparation Phase Complete! Processed {files_processed} files.")
+        print(f" Check {processed_dir} for anonymized data.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Hybrid Privacy RAG Orchestrator")
@@ -62,5 +59,4 @@ if __name__ == "__main__":
     if args.phase == "prep":
         run_preparation_phase()
     elif args.phase == "query":
-        print("🚧 Query Phase not fully implemented yet.")
-        # TODO: Implement Query Phase logic
+        print(" Query Phase not fully implemented yet.")

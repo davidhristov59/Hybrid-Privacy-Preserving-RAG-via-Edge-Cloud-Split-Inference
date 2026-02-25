@@ -1,4 +1,4 @@
-# 📊 Evaluation Metrics & Performance Benchmarks
+#  Evaluation Metrics & Performance Benchmarks
 
 This document outlines the evaluation framework for the Hybrid Privacy-Preserving RAG system. We focus on two key dimensions: **Performance (Retrieval & Generation Quality)** and **Security (Privacy Preservation Effectiveness).**
 
@@ -8,7 +8,7 @@ This document outlines the evaluation framework for the Hybrid Privacy-Preservin
 
 We utilize standard NLP metrics to assess the quality of the reconstructed answers compared to ground-truth references.
 
-### 🔴 ROUGE (Recall-Oriented Understudy for Gisting Evaluation)
+###  ROUGE (Recall-Oriented Understudy for Gisting Evaluation)
 
 Measures the overlap of N-grams between the system's output and the reference answer.
 
@@ -21,7 +21,7 @@ Measures the overlap of N-grams between the system's output and the reference an
 - **ROUGE-1 > 0.45** (Good content coverage)
 - **ROUGE-L > 0.40** (Coherent sentence structure)
 
-### 🔵 BLEU (Bilingual Evaluation Understudy)
+###  BLEU (Bilingual Evaluation Understudy)
 
 Focuses on precision—how many words in the generated summary appeared in the reference.
 
@@ -35,7 +35,7 @@ Where $p_n$ is the geometric mean of N-gram modifications.
 
 - **BLEU-4 > 0.30** (High alignment with expert answers)
 
-### 🟣 METEOR (Metric for Evaluation of Translation with Explicit ORdering)
+###  METEOR (Metric for Evaluation of Translation with Explicit ORdering)
 
 Improves upon BLEU by considering synonyms and stemming (e.g., "running" matches "run").
 
@@ -46,7 +46,7 @@ Improves upon BLEU by considering synonyms and stemming (e.g., "running" matches
 
 - **METEOR > 0.35** (Better semantic alignment than simple word matching)
 
-### 🟢 Perplexity (PPL)
+###  Perplexity (PPL)
 
 Measures how "surprised" a model is by the text. Lower perplexity indicates the generated text is more natural and fluent.
 
@@ -63,13 +63,13 @@ $$
 
 Since this is a RAG system, generation heavily depends on retrieval.
 
-### 🕵️ Retrieval Accuracy
+### ️ Retrieval Accuracy
 
 - **Precision@K (P@K):** Percentage of relevant documents in the top K results.
   - Target: **P@5 > 0.8**
 - **Recall@K (R@K):** Percentage of all relevant documents found in the top K results.
 
-### 🔒 Privacy Preservation Score (PPS)
+###  Privacy Preservation Score (PPS)
 
 A custom metric to evaluate the effectiveness of the masking/scrubbing pipeline.
 
@@ -81,9 +81,28 @@ $$
 - **Reconstruction Accuracy:** The percentage of entity codes (`Person_A`) correctly mapped back to original names (`Marko`) in the final output.
   - Target: **100%**.
 
+## 3. Automated Adversarial & Stress Testing Suite
+
+To ensure robustness, the system is subjected to an automated stress test containing **145 LLM-generated queries** categorized into **13 distinct groups**. This suite tests both the retrieval capabilities and the resilience of the privacy guardrails.
+
+### Testing Categories (10+ tests each)
+*   **Simple Retrieval:** Direct fact extraction.
+*   **Paraphrase:** Understanding reworded questions.
+*   **Inference:** Deriving implicit conclusions from data.
+*   **Negative Constraint:** Confirming the *absence* of information.
+*   **Multi-part:** Answering questions with multiple sub-queries.
+*   **Temporal:** Handling dates, times, and chronological events.
+*   **Multi-hop:** Linking information across different documents or rows.
+*   **Summarization:** Aggregating complex medical histories.
+*   **Privacy Mapping:** Testing if the system can accurately map Edge IDs.
+*   **Privacy Attack:** Direct attempts to extract PII (e.g., SSN, addresses).
+*   **Prompt Injection:** Attempts to bypass system prompts or alter behavior.
+*   **Safety Check:** Requests for unauthorized actions (e.g., deleting databases, altering dosages).
+*   **Out of Domain:** Questions unrelated to the medical context (e.g., weather, sports).
+
 ---
 
-## 3. Human Evaluation Protocols
+## 4. Human Evaluation Protocols
 
 Automated metrics cannot fully capture nuance, especially in sensitive domains.
 
@@ -104,7 +123,7 @@ Automated metrics cannot fully capture nuance, especially in sensitive domains.
 
 ---
 
-## 4. Evaluation Pipeline Implementation
+## 5. Evaluation Pipeline Implementation
 
 To run these evaluations automatedly, we use the `evaluate` library.
 
